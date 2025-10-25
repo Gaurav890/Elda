@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # AI Services
     CLAUDE_API_KEY: str = ""
     LETTA_API_KEY: str = ""
+    LETTA_PROJECT_ID: str = ""
     LETTA_BASE_URL: str = "https://api.letta.com"
 
     # Chroma Vector Database (REQUIRED for prize)
@@ -46,10 +47,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # CORS Settings
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:19006"
-    ]
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:19006"  # Comma-separated string
 
     # Background Job Settings
     REMINDER_CHECK_INTERVAL_SECONDS: int = 60
@@ -76,6 +74,11 @@ class Settings(BaseSettings):
     def is_development(self) -> bool:
         """Check if running in development"""
         return self.APP_ENV == "development"
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Convert CORS_ORIGINS string to list"""
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
 
 
 # Create global settings instance
