@@ -73,6 +73,9 @@ class Caregiver(Base):
     # Alerts acknowledged by this caregiver
     acknowledged_alerts = relationship("Alert", back_populates="acknowledged_by_caregiver")
 
+    # Notes created by this caregiver
+    notes = relationship("CaregiverNote", back_populates="caregiver")
+
     def __repr__(self):
         return f"<Caregiver {self.email} ({self.id})>"
 

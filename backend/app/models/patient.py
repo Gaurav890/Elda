@@ -90,6 +90,7 @@ class Patient(Base):
     alerts = relationship("Alert", back_populates="patient", cascade="all, delete-orphan")
     insights = relationship("PatientInsight", back_populates="patient", cascade="all, delete-orphan")
     activity_logs = relationship("ActivityLog", back_populates="patient", cascade="all, delete-orphan")
+    caregiver_notes = relationship("CaregiverNote", back_populates="patient", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Patient {self.first_name} {self.last_name} ({self.id})>"

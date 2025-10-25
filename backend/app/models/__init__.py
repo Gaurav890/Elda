@@ -20,6 +20,7 @@ from app.models.alert import Alert
 from app.models.insight import PatientInsight
 from app.models.activity_log import ActivityLog
 from app.models.system_log import SystemLog
+from app.models.note import CaregiverNote
 
 __all__ = [
     "Caregiver",
@@ -33,4 +34,5 @@ __all__ = [
     "PatientInsight",
     "ActivityLog",
     "SystemLog",
+    "CaregiverNote",
 ]

@@ -119,13 +119,14 @@ async def root():
 
 
 # Include API routers
-from app.api.v1 import auth, patients, schedules, conversations, voice
+from app.api.v1 import auth, patients, schedules, conversations, voice, notes
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(patients.router, prefix="/api/v1/patients", tags=["Patients"])
 app.include_router(schedules.router, prefix="/api/v1/schedules", tags=["Schedules"])
 app.include_router(conversations.router, prefix="/api/v1/conversations", tags=["Conversations"])
 app.include_router(voice.router, prefix="/api/v1/voice", tags=["Voice Interaction"])
+app.include_router(notes.router, prefix="/api/v1", tags=["Caregiver Notes"])
 
 # TODO: Push notification endpoints
 
