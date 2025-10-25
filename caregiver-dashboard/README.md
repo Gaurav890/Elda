@@ -67,12 +67,29 @@ pnpm start
 pnpm lint
 ```
 
-## Documentation
+## 📚 Documentation
 
-See `/Documents` folder for complete specifications and task breakdown.
+### Frontend Status
+- **[QUICK_START.md](Documents/QUICK_START.md)** - Resume work quickly
+- **[WEB_DASHBOARD_FRONTEND_STATUS.md](Documents/WEB_DASHBOARD_FRONTEND_STATUS.md)** - Complete setup status and progress
 
-## Backend API
+### Project Documentation (Root /Documents/)
+- **CAREGIVER_WEB_APP_SPECIFICATION.md** - Complete technical specifications
+- **CAREGIVER_WEB_APP_TASKS.md** - Phase-by-phase task breakdown
+- **CAREGIVER_WEB_APP_SETUP_GUIDE.md** - Detailed setup instructions
+- **CAREGIVER_WEB_APP_API_GUIDE.md** - Backend API reference
 
-Backend runs on Railway: http://localhost:8000 (development)
+## 🔗 Backend API
 
-API Documentation: http://localhost:8000/docs
+**Development:** http://localhost:8000
+**API Docs:** http://localhost:8000/docs
+**Total Endpoints:** 49 (40 for caregiver dashboard)
+
+## ⚠️ Current Status
+
+**Setup:** 95% complete
+**Issue:** Missing `autoprefixer` dependency
+**Fix:** Run `npm install`
+**Next:** Install shadcn/ui components and start Phase 1 development
+
+See [QUICK_START.md](Documents/QUICK_START.md) for detailed status.
