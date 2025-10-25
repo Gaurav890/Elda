@@ -62,7 +62,7 @@ class LettaService:
                     timeout=30.0
                 )
 
-                if response.status_code == 200:
+                if response.status_code in [200, 201]:  # Accept both 200 OK and 201 Created
                     agent = response.json()
                     agent_id = agent.get("id")
                     logger.info(f"Created Letta agent {agent_id} for patient {patient_id}")
