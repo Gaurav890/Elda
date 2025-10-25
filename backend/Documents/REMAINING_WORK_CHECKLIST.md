@@ -32,6 +32,18 @@
 
 **Why:** Makes the system more personalized and production-ready
 
+### Inactivity Detection Job ✅ COMPLETED (1 hour)
+- [x] Create inactivity_detector.py job
+- [x] Monitor patient heartbeat timestamps
+- [x] Create alerts at 3 severity levels (2hr, 4hr, 6hr thresholds)
+- [x] Include emergency contact info in alerts
+- [x] Prevent duplicate alerts per severity
+- [x] Update heartbeat endpoint to set last_heartbeat_at
+- [x] Register job in scheduler (runs every 15 minutes)
+- [x] Test end-to-end functionality
+
+**Why:** Critical safety feature - detects when patients are inactive/unresponsive
+
 ### Phase 3: Advanced Caregiver Preferences ✅ COMPLETED (30 minutes)
 - [x] Add `preferences` JSONB field to caregivers table
 - [x] Create migration (8ab72b20f47b)

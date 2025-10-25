@@ -17,6 +17,7 @@ from app.jobs.summary_generator import (
     generate_daily_summaries,
     generate_weekly_insights
 )
+from app.jobs.inactivity_detector import detect_patient_inactivity
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,17 @@ def init_scheduler():
         trigger=IntervalTrigger(minutes=5),
         id="missed_reminder_check",
         name="Check and mark missed reminders",
+        replace_existing=True,
+        max_instances=1
+    )
+
+    # ===== INACTIVITY DETECTION =====
+    # Run every 15 minutes to check for inactive patients
+    scheduler.add_job(
+        func=detect_patient_inactivity,
+        trigger=IntervalTrigger(minutes=15),
+        id="inactivity_detection",
+        name="Detect inactive patients",
         replace_existing=True,
         max_instances=1
     )

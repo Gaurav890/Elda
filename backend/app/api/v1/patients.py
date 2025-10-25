@@ -404,7 +404,12 @@ def record_patient_activity(
     db.add(activity_log)
 
     # Update patient's last_active_at timestamp
-    patient.last_active_at = datetime.utcnow()
+    now = datetime.utcnow()
+    patient.last_active_at = now
+
+    # If this is a heartbeat, also update last_heartbeat_at
+    if activity_data.activity_type == "heartbeat":
+        patient.last_heartbeat_at = now
 
     db.commit()
     db.refresh(activity_log)
