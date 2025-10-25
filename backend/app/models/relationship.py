@@ -2,7 +2,7 @@
 PatientCaregiverRelationship model - Association table for many-to-many relationship
 """
 
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
@@ -38,7 +38,7 @@ class PatientCaregiverRelationship(Base):
     # Options: "primary", "family", "professional", "emergency_contact"
 
     # Is this the primary caregiver?
-    is_primary = Column(String, default=False, nullable=False)
+    is_primary = Column(Boolean, default=False, nullable=False)
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

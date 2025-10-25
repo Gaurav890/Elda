@@ -2,7 +2,7 @@
 PatientInsight model - Letta-powered long-term insights
 """
 
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, JSON, Float, Integer, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -47,14 +47,14 @@ class PatientInsight(Base):
     description = Column(Text, nullable=False)  # Detailed explanation
 
     # Supporting Evidence
-    confidence_score = Column(String, nullable=True)  # How confident Letta is (0.0-1.0)
-    evidence_count = Column(String, nullable=True)  # How many data points support this
+    confidence_score = Column(Float, nullable=True)  # How confident Letta is (0.0-1.0)
+    evidence_count = Column(Integer, nullable=True)  # How many data points support this
 
     supporting_data = Column(JSON, default=list)
     # Example: [{"date": "2025-10-20", "event": "missed morning med", "conversation_id": "123"}]
 
     # Actionable?
-    is_actionable = Column(String, default=False, nullable=False)
+    is_actionable = Column(Boolean, default=False, nullable=False)
     suggested_action = Column(Text, nullable=True)  # What can be done about it
 
     # Source
@@ -62,7 +62,7 @@ class PatientInsight(Base):
     letta_query_used = Column(Text, nullable=True)  # What query was sent to Letta
 
     # Status
-    is_active = Column(String, default=True, nullable=False)  # Still relevant?
+    is_active = Column(Boolean, default=True, nullable=False)  # Still relevant?
     relevance_end_date = Column(DateTime, nullable=True)  # When this insight becomes outdated
 
     # Timestamps

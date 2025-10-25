@@ -2,7 +2,7 @@
 ActivityLog model - Patient activity tracking
 """
 
-from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, JSON
+from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, JSON, Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -52,8 +52,8 @@ class ActivityLog(Base):
     app_version = Column(String(20), nullable=True)  # "1.0.0"
 
     # Location (if available)
-    latitude = Column(String, nullable=True)
-    longitude = Column(String, nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
 
     # Battery
     battery_level = Column(Integer, nullable=True)  # 0-100

@@ -2,7 +2,7 @@
 SystemLog model - System-level logging and audit trail
 """
 
-from sqlalchemy import Column, String, Text, DateTime, JSON
+from sqlalchemy import Column, String, Text, DateTime, JSON, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 import uuid
@@ -49,8 +49,8 @@ class SystemLog(Base):
     # Example: {"error": "Connection timeout", "retry_count": 3}
 
     # Performance Metrics
-    duration_ms = Column(String, nullable=True)  # How long operation took
-    response_time_ms = Column(String, nullable=True)  # For API calls
+    duration_ms = Column(Integer, nullable=True)  # How long operation took
+    response_time_ms = Column(Integer, nullable=True)  # For API calls
 
     # User Context (if applicable)
     user_id = Column(UUID(as_uuid=True), nullable=True)  # Caregiver or patient ID
