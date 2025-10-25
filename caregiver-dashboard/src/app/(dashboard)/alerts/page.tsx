@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { Bell, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +13,8 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { usePatients } from '@/hooks/usePatients';
-import { useAlerts } from '@/hooks/useAlerts';
+import { getPatientAlerts } from '@/lib/api/alerts';
+import { alertKeys } from '@/hooks/useAlerts';
 import { AlertCard } from '@/components/alerts/AlertCard';
 import { AlertSeverity, AlertStatus } from '@/types/alert';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,28 +27,44 @@ export default function AlertsPage() {
   // Fetch patients for filter dropdown
   const { data: patients, isLoading: patientsLoading } = usePatients();
 
-  // For now, we'll use the first patient's alerts as a demo
-  // In a real app, you'd fetch alerts for all patients from a global endpoint
-  const { data: alerts, isLoading: alertsLoading } = useAlerts(
-    patients?.[0]?.id || '1'
+  // Fetch alerts for ALL patients using useQueries (proper way to call multiple queries)
+  const alertQueries = useQueries({
+    queries: (patients || []).map(patient => ({
+      queryKey: alertKeys.list(patient.id),
+      queryFn: () => getPatientAlerts(patient.id),
+      enabled: !!patient.id,
+      staleTime: 30000, // 30 seconds
+      refetchInterval: 60000, // Refetch every minute
+    })),
+  });
+
+  // Combine all alerts from all patients
+  const allAlerts = alertQueries.flatMap(query => query.data || []);
+  const alertsLoading = alertQueries.some(query => query.isLoading);
+
+  // Create a map of patient ID to patient name for display
+  const patientMap = new Map(
+    patients?.map(p => [p.id, p.full_name || p.display_name]) || []
   );
 
   // Filter alerts
-  const filteredAlerts = alerts?.filter((alert) => {
+  const filteredAlerts = allAlerts.filter((alert) => {
     if (severityFilter !== 'all' && alert.severity !== severityFilter) {
       return false;
     }
     if (statusFilter !== 'all' && alert.status !== statusFilter) {
       return false;
     }
-    // Patient filter would be implemented when we have multi-patient alerts
+    if (patientFilter !== 'all' && alert.patient_id !== patientFilter) {
+      return false;
+    }
     return true;
   });
 
   // Count unacknowledged alerts
-  const unacknowledgedCount = alerts?.filter(
+  const unacknowledgedCount = allAlerts.filter(
     (alert) => alert.status === AlertStatus.ACTIVE
-  ).length || 0;
+  ).length;
 
   return (
     <div className="h-full flex flex-col">
@@ -162,11 +180,9 @@ export default function AlertsPage() {
               <AlertCard
                 key={alert.id}
                 alert={alert}
-                patientId={patients?.[0]?.id || '1'}
+                patientId={alert.patient_id}
                 showPatientName={true}
-                patientName={
-                  patients?.[0]?.full_name || patients?.[0]?.display_name
-                }
+                patientName={patientMap.get(alert.patient_id) || 'Unknown Patient'}
               />
             ))}
           </div>

@@ -72,11 +72,23 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Log error in development
+    // Log error in development (except for expected 404s on mock endpoints)
     if (process.env.NODE_ENV === 'development') {
-      console.error(
-        `❌ ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - ${error.response?.status || 'Network Error'}`
-      );
+      const isMockEndpoint = originalRequest?.url?.includes('/alerts') ||
+        originalRequest?.url?.includes('/schedules') ||
+        originalRequest?.url?.includes('/notes') ||
+        originalRequest?.url?.includes('/conversations') ||
+        originalRequest?.url?.includes('/reports') ||
+        originalRequest?.url?.includes('/activity');
+
+      const is404 = error.response?.status === 404;
+
+      // Only log if it's not a 404 on a mock endpoint
+      if (!(is404 && isMockEndpoint)) {
+        console.error(
+          `❌ ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - ${error.response?.status || 'Network Error'}`
+        );
+      }
     }
 
     // If error is 401 and we haven't retried yet

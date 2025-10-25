@@ -19,7 +19,7 @@ export async function getPatientAlerts(patientId: string): Promise<Alert[]> {
     );
     return response.data.alerts || [];
   } catch (error) {
-    console.error('Error fetching patient alerts:', error);
+    // Silently fall back to mock data (expected until backend endpoint is ready)
     // Return mock data for now until backend endpoint is ready
     const alerts = getMockAlerts(patientId);
     // Apply acknowledged status from in-memory cache
@@ -45,7 +45,7 @@ export async function acknowledgeAlert(alertId: string): Promise<Alert> {
     );
     return response.data;
   } catch (error) {
-    console.error('Error acknowledging alert:', error);
+    // Silently fall back to mock data (expected until backend endpoint is ready)
     // Add to acknowledged cache for mock data
     acknowledgedAlerts.add(alertId);
 
