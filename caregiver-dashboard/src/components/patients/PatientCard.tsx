@@ -71,14 +71,14 @@ export function PatientCard({ patient, alertCount = 0 }: PatientCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <h3 className="text-lg font-semibold text-textPrimary truncate">
-                {patient.full_name}
+                {patient.full_name || `${patient.first_name} ${patient.last_name}`}
               </h3>
               <Badge variant={patient.is_active ? 'default' : 'secondary'} className="ml-2">
                 {patient.is_active ? 'Active' : 'Inactive'}
               </Badge>
             </div>
 
-            <p className="text-sm text-textSecondary mb-2">Age: {patient.age}</p>
+            <p className="text-sm text-textSecondary mb-2">Age: {patient.age || 'Unknown'}</p>
 
             <div className="flex items-center text-xs text-textSecondary">
               <span className="flex items-center">

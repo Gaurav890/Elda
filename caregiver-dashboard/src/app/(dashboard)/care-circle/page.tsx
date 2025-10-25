@@ -19,10 +19,17 @@ export default function CareCirclePage() {
 
   // Filter patients by search query
   const filteredPatients = patients?.filter((patient) => {
-    const fullName = patient.full_name.toLowerCase();
-    const displayName = patient.display_name.toLowerCase();
+    const fullName = (patient.full_name || '').toLowerCase();
+    const displayName = (patient.display_name || '').toLowerCase();
+    const firstName = (patient.first_name || '').toLowerCase();
+    const lastName = (patient.last_name || '').toLowerCase();
     const query = searchQuery.toLowerCase();
-    return fullName.includes(query) || displayName.includes(query);
+    return (
+      fullName.includes(query) ||
+      displayName.includes(query) ||
+      firstName.includes(query) ||
+      lastName.includes(query)
+    );
   });
 
   // Handle Add Patient button click

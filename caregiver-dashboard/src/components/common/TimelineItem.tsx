@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { ActivityLog, ActivityType } from '@/types/activity';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -81,13 +82,16 @@ const activityIcons: Record<ActivityType, { icon: any; color: string; bgColor: s
 export function TimelineItem({ activity, isLast = false }: TimelineItemProps) {
   const { icon: Icon, color, bgColor } = activityIcons[activity.activity_type];
 
-  const formatTimestamp = (timestamp: string) => {
+  // Fix hydration issue: Calculate time on client only
+  const [formattedTime, setFormattedTime] = useState('Recently');
+
+  useEffect(() => {
     try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+      setFormattedTime(formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }));
     } catch {
-      return 'Recently';
+      setFormattedTime('Recently');
     }
-  };
+  }, [activity.timestamp]);
 
   return (
     <div className="relative flex gap-4 pb-6">
@@ -106,7 +110,7 @@ export function TimelineItem({ activity, isLast = false }: TimelineItemProps) {
         <div className="flex items-start justify-between mb-1">
           <h4 className="text-sm font-semibold text-gray-900">{activity.title}</h4>
           <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-            {formatTimestamp(activity.timestamp)}
+            {formattedTime}
           </span>
         </div>
         {activity.description && (

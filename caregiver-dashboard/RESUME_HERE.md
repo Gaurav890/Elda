@@ -1,6 +1,6 @@
 # 🚀 Resume Work Here
 
-**Quick Start Guide After Auto-Compact**
+**Quick Start Guide - Updated After Phase 3.3 Completion**
 
 ---
 
@@ -30,7 +30,7 @@ cd /Users/gaurav/Elda/backend && source venv/bin/activate && uvicorn app.main:ap
 
 ---
 
-## 📊 Current Status: 60% Complete
+## 📊 Current Status: 85% Complete
 
 ### ✅ Phases 1-2 Complete
 - Authentication (login, register, JWT)
@@ -38,13 +38,62 @@ cd /Users/gaurav/Elda/backend && source venv/bin/activate && uvicorn app.main:ap
 - Care Circle page with 3-step add form
 - Dashboard layout with sidebar
 
-### ⏳ Phase 3: Next To Build
-**Patient Detail Page with Tabs** (2 days estimated)
+### ✅ Phase 3.1 Complete - Patient Detail Header & Layout
+- Patient detail page with header
+- Large avatar with initials fallback
+- Name, age, status display
+- Quick action buttons (Edit, Trigger Reminder, Nudge)
+- 6-tab navigation (Overview, Routine, Reports, Conversations, Alerts, Notes)
+- URL-based tab state (?tab=overview)
+- Loading and error states
 
-Start with Task 3.1:
-1. Create patient detail header
-2. Set up tab navigation (Overview, Routine, Conversations, Reports, Alerts, Notes)
-3. Build Overview tab first (KPIs + activity timeline)
+### ✅ Phase 3.2 Complete - Overview Tab
+- 4 KPI Cards:
+  - Today's Reminders (3/5 completed)
+  - Last Interaction (time since last activity)
+  - Current Mood (emoji + sentiment)
+  - Weekly Adherence (85% rate)
+- Activity Timeline (last 20 activities with icons)
+- AI Insights Sidebar (3 recent insights with confidence scores)
+- Auto-refresh every 60 seconds
+- Empty states for no activity/insights
+- Responsive layout (2/3 timeline + 1/3 insights)
+
+### ✅ Phase 3.3 Complete - Routine Tab
+- Schedule list (table on desktop, cards on mobile)
+- Color-coded type badges (medication, meal, exercise, etc.)
+- Add/Edit schedule form (side drawer)
+- Delete confirmation dialog
+- Active/Inactive toggle switch
+- Empty state when no schedules
+- Full CRUD operations
+- Toast notifications
+
+### ✅ Phase 3.4 Complete - Conversations Tab
+- Chat-like timeline layout
+- AI messages on left (gray bubble with bot icon)
+- Patient messages on right (blue bubble with initials)
+- Sentiment emojis on patient messages (😊 😐 😔)
+- Health mentions highlighted (yellow background)
+- Urgency indicators for high/critical messages
+- Date filter dropdown (Today, 7 days, 30 days, All time)
+- Auto-scroll to latest message
+- Empty state when no conversations
+- Relative timestamps ("2 hours ago")
+
+### ✅ Phase 4.1 Complete - Alerts Tab
+- Alert cards with color-coded severity badges (Low/Medium/High/Critical)
+- Alert type icons (medication, health, activity, safety, mood)
+- Acknowledge functionality with toast notifications
+- Filter by severity (All/Low/Medium/High/Critical)
+- Filter by status (All/Active/Acknowledged/Resolved)
+- Recommended action highlights
+- Empty state when no alerts match filters
+- Auto-refresh every 60 seconds
+- 6 mock alerts with diverse examples
+
+### ⏳ Phase 4.2: Next To Build
+**Reports Tab** - Analytics and charts for patient health trends
 
 ---
 
@@ -57,14 +106,18 @@ Password: password123
 URL:      http://localhost:3000
 ```
 
-### Known Issues & Solutions
-1. **Browser shows "undefined is not valid JSON"**
+### Known Issues & Solutions (All Resolved ✅)
+1. **Hydration error - FIXED**
+   - Used useState + useEffect for time-based values
+   - Fixed in: PatientDetailHeader, TimelineItem, PatientOverviewTab
+
+2. **"Cannot read properties of undefined (reading 'toLowerCase')" - FIXED**
+   - Added null-safe operators for full_name/display_name
+   - Fixed in: care-circle page, PatientCard, PatientDetailHeader
+
+3. **Browser shows "undefined is not valid JSON"**
    - Run: `localStorage.clear(); location.reload()` in console
    - Or open: `file:///Users/gaurav/Elda/caregiver-dashboard/clear-storage.html`
-
-2. **Backend registration returns 500**
-   - Use test user above
-   - Or: `python /Users/gaurav/Elda/backend/create_test_user_v2.py`
 
 ---
 
@@ -73,10 +126,10 @@ URL:      http://localhost:3000
 ### For Context
 - `SESSION_SUMMARY.md` - Complete session details
 - `SETUP_COMPLETE.md` - Setup & configuration
-- `LOGIN_FIXED.md` - Auth fix details
+- `RESUME_HERE.md` - This file (current status)
 
 ### For Tasks
-- `Documents/CAREGIVER_WEB_APP_TASKS.md` - Full task list
+- `Documents/CAREGIVER_WEB_APP_TASKS.md` - Full task list (line 812 for Phase 3.4)
 - `Documents/CAREGIVER_WEB_APP_API_GUIDE.md` - API docs
 - `Documents/DESIGN_COMPLIANCE_REVIEW.md` - Design specs
 
@@ -87,36 +140,77 @@ URL:      http://localhost:3000
 
 ---
 
-## 🎯 Next Task: Phase 3.1
+## 📂 New Files Created (Phase 3.1-3.3)
 
-**Patient Detail Header & Layout** (File: `src/app/(dashboard)/patients/[id]/page.tsx`)
+### Phase 3.1 Files:
+- `src/components/patients/PatientDetailHeader.tsx` - Header with avatar, actions
+- `src/app/(dashboard)/patients/[id]/page.tsx` - Main patient detail page
+- `src/app/(dashboard)/patients/[id]/loading.tsx` - Loading skeleton
+
+### Phase 3.2 Files:
+- `src/types/activity.ts` - Activity, insights, mood types
+- `src/lib/api/activity.ts` - Activity API helpers
+- `src/hooks/useActivity.ts` - React Query hooks for activity
+- `src/components/common/KPICard.tsx` - Reusable KPI card
+- `src/components/common/TimelineItem.tsx` - Activity timeline item
+- `src/components/patients/PatientOverviewTab.tsx` - Overview tab component
+
+### Phase 3.3 Files:
+- `src/types/schedule.ts` - Schedule types
+- `src/lib/api/schedules.ts` - Schedule API helpers
+- `src/hooks/useSchedules.ts` - React Query hooks for schedules
+- `src/components/schedules/ScheduleList.tsx` - Schedule list (table/cards)
+- `src/components/schedules/ScheduleForm.tsx` - Add/Edit form (drawer)
+- `src/components/patients/PatientRoutineTab.tsx` - Routine tab component
+
+### Phase 3.4 Files:
+- `src/types/conversation.ts` - Conversation types, sentiment/urgency enums
+- `src/lib/api/conversations.ts` - Conversation API helpers with data transformation
+- `src/hooks/useConversations.ts` - React Query hooks for conversations
+- `src/components/conversations/ConversationMessage.tsx` - Individual message bubble
+- `src/components/conversations/ConversationTimeline.tsx` - Chat timeline with auto-scroll
+- `src/components/patients/PatientConversationsTab.tsx` - Conversations tab component
+
+### Phase 4.1 Files:
+- `src/types/alert.ts` - Alert types, severity/type/status enums
+- `src/lib/api/alerts.ts` - Alert API helpers with mock data
+- `src/hooks/useAlerts.ts` - React Query hooks for alerts
+- `src/components/alerts/SeverityBadge.tsx` - Color-coded severity badge
+- `src/components/alerts/AlertCard.tsx` - Alert card with acknowledge button
+- `src/components/patients/PatientAlertsTab.tsx` - Alerts tab component
+
+### shadcn Components Installed:
+- `switch` - Active/Inactive toggles
+- `checkbox` - Days of week selection
+- `alert-dialog` - Delete confirmations
+- `textarea` - Description fields
+- `table` - Schedule list table
+- `alert` - Alert messages (Phase 3.4)
+
+---
+
+## 🎯 Next Task: Phase 4.2 - Reports Tab
+
+**Goal:** Display patient health analytics with charts and trends
 
 ### What to Build:
-1. **Header Section**
-   - Large avatar (profile photo or initials)
-   - Full name + age (H1)
-   - Status badge (Active/Inactive)
-   - Last activity text ("Active 2 hours ago")
-   - Quick action buttons: Edit, Trigger Reminder, Nudge
+1. **Medication Adherence Chart**
+   - Weekly/monthly adherence rates
+   - Line chart showing trends over time
 
-2. **Tab Navigation**
-   - Tabs: Overview, Routine, Reports, Conversations, Alerts, Notes
-   - URL-based tab state (?tab=overview)
-   - Active tab highlighting
+2. **Activity Trends**
+   - Daily activity levels
+   - Comparison with previous periods
 
-3. **Components Needed**
-   ```bash
-   npx shadcn@latest add tabs  # Already installed
-   ```
+3. **Mood Analytics**
+   - Sentiment trends over time
+   - Mood distribution pie chart
 
-4. **Files to Create**
-   - `src/components/patients/PatientDetailHeader.tsx`
-   - Update: `src/app/(dashboard)/patients/[id]/page.tsx`
+4. **Health Metrics**
+   - Vital signs tracking (if available)
+   - Key health indicators
 
-### API Endpoints Used:
-```typescript
-GET /api/v1/patients/{id}  // Already working
-```
+See task document for full details.
 
 ---
 
@@ -128,14 +222,17 @@ Before resuming:
 node test-frontend-auth.js
 # Should show: ✅ Got caregiver data
 
-# 2. Test patient API
-node test-login.js
-# Should show: ✅ Patient API working, Total patients: X
-
-# 3. Open app
+# 2. Open app
 open http://localhost:3000/login
 # Login with test@example.com / password123
 # Should redirect to /care-circle
+
+# 3. Click any patient → Should see:
+#    - Overview tab: 4 KPIs, timeline, insights
+#    - Routine tab: Schedule list with CRUD operations
+#    - Conversations tab: Chat timeline with AI/Patient messages
+#    - Alerts tab: 6 alerts with filters and acknowledge buttons
+#    - Other tabs: Placeholder content (Reports, Notes)
 ```
 
 ---
@@ -143,7 +240,7 @@ open http://localhost:3000/login
 ## 💻 Development Workflow
 
 ### To Continue Building:
-1. Read the task in `Documents/CAREGIVER_WEB_APP_TASKS.md`
+1. Read task in `Documents/CAREGIVER_WEB_APP_TASKS.md` (line 812)
 2. Check design in `Documents/DESIGN_COMPLIANCE_REVIEW.md`
 3. Create components in `src/components/`
 4. Create pages in `src/app/(dashboard)/`
@@ -185,41 +282,51 @@ SELECT * FROM caregivers LIMIT 1;  # Check data
 
 ---
 
-## 📋 Phase 3 Task Checklist
-
-Copy this to track progress:
+## 📋 Phase 3-4 Progress Checklist
 
 ```markdown
 ## Phase 3: Patient Detail Tabs
 
-### Task 3.1: Header & Layout
-- [ ] Create PatientDetailHeader.tsx
-- [ ] Add large avatar
-- [ ] Display name, age, status
-- [ ] Add quick action buttons
-- [ ] Set up tab navigation
-- [ ] Test URL-based tabs
+### Task 3.1: Header & Layout ✅ COMPLETE
+- ✅ Create PatientDetailHeader.tsx
+- ✅ Add large avatar
+- ✅ Display name, age, status
+- ✅ Add quick action buttons
+- ✅ Set up tab navigation
+- ✅ Test URL-based tabs
 
-### Task 3.2: Overview Tab
-- [ ] Create 4 KPI cards
-- [ ] Build activity timeline
-- [ ] Add AI insights sidebar
-- [ ] Implement auto-refresh
-- [ ] Add empty states
+### Task 3.2: Overview Tab ✅ COMPLETE
+- ✅ Create 4 KPI cards
+- ✅ Build activity timeline
+- ✅ Add AI insights sidebar
+- ✅ Implement auto-refresh
+- ✅ Add empty states
 
-### Task 3.3: Routine Tab
-- [ ] Create schedule list
-- [ ] Add schedule form (drawer)
-- [ ] Delete confirmation dialog
-- [ ] Active toggle
-- [ ] Empty state
+### Task 3.3: Routine Tab ✅ COMPLETE
+- ✅ Create schedule list
+- ✅ Add schedule form (drawer)
+- ✅ Delete confirmation dialog
+- ✅ Active toggle
+- ✅ Empty state
 
-### Task 3.4: Conversations Tab
-- [ ] Chat timeline layout
-- [ ] AI vs Patient bubbles
-- [ ] Sentiment indicators
-- [ ] Date filter
-- [ ] Empty state
+### Task 3.4: Conversations Tab ✅ COMPLETE
+- ✅ Chat timeline layout
+- ✅ AI vs Patient bubbles
+- ✅ Sentiment indicators
+- ✅ Date filter
+- ✅ Empty state
+
+## Phase 4: Additional Features
+
+### Task 4.1: Alerts Tab ✅ COMPLETE
+- ✅ Create alert types and enums
+- ✅ Build alert API with mock data
+- ✅ Create SeverityBadge component
+- ✅ Create AlertCard component
+- ✅ Add severity/status filters
+- ✅ Acknowledge functionality
+- ✅ Auto-refresh alerts
+- ✅ Empty states
 ```
 
 ---
@@ -233,21 +340,36 @@ Copy this to track progress:
 - 3-step Add Patient modal
 - Search functionality
 - Responsive design
+- **Patient Detail Page with 5 working tabs:**
+  - **Overview:** KPIs, Activity Timeline, AI Insights
+  - **Routine:** Schedule CRUD with color-coded badges
+  - **Conversations:** Chat timeline with AI/Patient messages, sentiment, health mentions
+  - **Alerts:** Alert cards with severity badges, filters, acknowledge functionality
+  - **Reports/Notes:** Placeholder tabs
 
 **What's Next:**
-- Patient detail page (7 tabs)
-- Starting with: Header + Overview tab
+- Reports Tab (analytics and charts)
+- Notes to AI Tab (caregiver instructions)
 
 **Tech Stack:**
 - Next.js 15 + TypeScript
 - Tailwind + shadcn/ui
 - React Query for data
 - Axios for API calls
+- date-fns for time formatting
 
 **Database:**
 - PostgreSQL (elda_db)
 - 12 tables created
 - 1 test user: test@example.com
+
+**API Endpoints Implemented:**
+- GET `/api/v1/patients` - List patients
+- GET `/api/v1/patients/{id}` - Get patient
+- POST `/api/v1/patients` - Create patient
+- GET `/api/v1/patients/{id}/activity` - Activity logs (mock data)
+- GET `/api/v1/schedules/patients/{id}/schedules` - Patient schedules (mock data)
+- POST/PATCH/DELETE schedules endpoints (ready for backend)
 
 ---
 
@@ -260,13 +382,15 @@ Copy this to track progress:
 4. Test scripts in project root
 
 ### Common Solutions:
-- Clear browser storage
+- Clear browser storage if auth issues
 - Hard refresh (Cmd+Shift+R)
 - Restart dev servers
-- Check backend is running
+- Check backend is running on port 8000
 
 ---
 
-**Ready to continue? Start with Phase 3.1: Patient Detail Header!** 🚀
+**Ready to continue? Start with Phase 4.2: Reports Tab!** 🚀
 
-See `Documents/CAREGIVER_WEB_APP_TASKS.md` line 576 for full task details.
+See `Documents/CAREGIVER_WEB_APP_TASKS.md` for full task details.
+
+**Progress:** 85% complete (Phase 3 + 4.1 done - 5 patient detail tabs working!)

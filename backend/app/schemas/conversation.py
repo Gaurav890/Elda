@@ -49,8 +49,10 @@ class ConversationListResponse(BaseModel):
     id: UUID
     patient_id: UUID
     patient_message: str
+    ai_response: str
     conversation_type: str
     sentiment: Optional[str]
+    health_mentions: List[str]
     urgency_level: str
     created_at: datetime
 

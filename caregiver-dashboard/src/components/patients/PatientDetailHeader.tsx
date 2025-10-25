@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Patient } from '@/types/patient';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -23,10 +24,14 @@ export function PatientDetailHeader({
   // Get initials for avatar fallback
   const initials = `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
 
-  // Format last activity
-  const lastActivity = patient.last_active_at
-    ? `Active ${formatDistanceToNow(new Date(patient.last_active_at), { addSuffix: true })}`
-    : 'No recent activity';
+  // Fix hydration issue: Calculate time on client only
+  const [lastActivity, setLastActivity] = useState('No recent activity');
+
+  useEffect(() => {
+    if (patient.last_active_at) {
+      setLastActivity(`Active ${formatDistanceToNow(new Date(patient.last_active_at), { addSuffix: true })}`);
+    }
+  }, [patient.last_active_at]);
 
   return (
     <div className="border-b bg-white">
@@ -36,7 +41,10 @@ export function PatientDetailHeader({
           <div className="flex items-start gap-4">
             {/* Large Avatar */}
             <Avatar className="h-20 w-20">
-              <AvatarImage src={patient.profile_photo_url} alt={patient.full_name} />
+              <AvatarImage
+                src={patient.profile_photo_url}
+                alt={patient.full_name || `${patient.first_name} ${patient.last_name}`}
+              />
               <AvatarFallback className="text-2xl bg-blue-100 text-blue-700">
                 {initials}
               </AvatarFallback>
@@ -46,10 +54,10 @@ export function PatientDetailHeader({
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {patient.full_name}
+                  {patient.full_name || `${patient.first_name} ${patient.last_name}`}
                 </h1>
                 <span className="text-2xl font-normal text-gray-500">
-                  {patient.age}
+                  {patient.age || 'Unknown'}
                 </span>
               </div>
 

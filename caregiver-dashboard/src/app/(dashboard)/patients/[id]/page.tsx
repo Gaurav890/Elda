@@ -6,6 +6,9 @@ import { ArrowLeft } from 'lucide-react';
 import { usePatient } from '@/hooks/usePatients';
 import { PatientDetailHeader } from '@/components/patients/PatientDetailHeader';
 import { PatientOverviewTab } from '@/components/patients/PatientOverviewTab';
+import { PatientRoutineTab } from '@/components/patients/PatientRoutineTab';
+import { PatientConversationsTab } from '@/components/patients/PatientConversationsTab';
+import { PatientAlertsTab } from '@/components/patients/PatientAlertsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
 
@@ -119,14 +122,7 @@ export default function PatientDetailPage() {
             </TabsContent>
 
             <TabsContent value="routine" className="mt-0">
-              <div className="rounded-lg border bg-white p-8 text-center">
-                <h3 className="text-lg font-semibold mb-2">Routine Tab</h3>
-                <p className="text-sm text-muted-foreground">
-                  This tab will show the patient's daily routine and schedule.
-                  <br />
-                  Coming in Task 3.3
-                </p>
-              </div>
+              <PatientRoutineTab patient={patient} />
             </TabsContent>
 
             <TabsContent value="reports" className="mt-0">
@@ -141,25 +137,11 @@ export default function PatientDetailPage() {
             </TabsContent>
 
             <TabsContent value="conversations" className="mt-0">
-              <div className="rounded-lg border bg-white p-8 text-center">
-                <h3 className="text-lg font-semibold mb-2">Conversations Tab</h3>
-                <p className="text-sm text-muted-foreground">
-                  This tab will show conversation history between AI and patient.
-                  <br />
-                  Coming in Task 3.4
-                </p>
-              </div>
+              <PatientConversationsTab patient={patient} />
             </TabsContent>
 
             <TabsContent value="alerts" className="mt-0">
-              <div className="rounded-lg border bg-white p-8 text-center">
-                <h3 className="text-lg font-semibold mb-2">Alerts Tab</h3>
-                <p className="text-sm text-muted-foreground">
-                  This tab will show patient alerts and notifications.
-                  <br />
-                  Coming soon
-                </p>
-              </div>
+              <PatientAlertsTab patientId={patientId} />
             </TabsContent>
 
             <TabsContent value="notes" className="mt-0">

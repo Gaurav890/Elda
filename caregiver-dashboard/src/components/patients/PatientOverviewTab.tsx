@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Patient } from '@/types/patient';
 import { KPICard } from '@/components/common/KPICard';
 import { TimelineItem } from '@/components/common/TimelineItem';
@@ -49,6 +50,17 @@ export function PatientOverviewTab({ patient }: PatientOverviewTabProps) {
   const { data: moodData, isLoading: moodLoading } = usePatientMood(patient.id);
   const { data: adherenceData, isLoading: adherenceLoading } = useWeeklyAdherence(patient.id);
 
+  // Fix hydration issue: Calculate time on client only
+  const [lastInteractionValue, setLastInteractionValue] = useState('No activity');
+
+  useEffect(() => {
+    if (patient.last_active_at) {
+      setLastInteractionValue(
+        formatDistanceToNow(new Date(patient.last_active_at), { addSuffix: true })
+      );
+    }
+  }, [patient.last_active_at]);
+
   // Calculate KPI values
   const todayRemindersValue = reminderData
     ? `${reminderData.summary.completed}/${reminderData.summary.total}`
@@ -56,10 +68,6 @@ export function PatientOverviewTab({ patient }: PatientOverviewTabProps) {
   const todayRemindersRate = reminderData?.summary.completion_rate || 0;
   const todayRemindersVariant =
     todayRemindersRate >= 80 ? 'success' : todayRemindersRate >= 60 ? 'warning' : 'danger';
-
-  const lastInteractionValue = patient.last_active_at
-    ? formatDistanceToNow(new Date(patient.last_active_at), { addSuffix: true })
-    : 'No activity';
 
   const moodValue = moodData ? moodEmojis[moodData.sentiment] : '😐';
   const moodLabel = moodData ? moodLabels[moodData.sentiment] : 'Unknown';
