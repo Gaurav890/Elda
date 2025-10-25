@@ -84,7 +84,7 @@ export function PatientDetailHeader({
                 </span>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <Badge
                   variant={patient.is_active ? 'default' : 'secondary'}
                   className={
@@ -95,6 +95,26 @@ export function PatientDetailHeader({
                 >
                   {patient.is_active ? 'Active' : 'Inactive'}
                 </Badge>
+
+                {/* Device Status Badge */}
+                <Badge
+                  variant="outline"
+                  className={
+                    deviceStatus === 'online'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : deviceStatus === 'offline'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-gray-50 text-gray-600 border-gray-200'
+                  }
+                >
+                  <Smartphone className="h-3 w-3 mr-1" />
+                  {deviceStatus === 'online'
+                    ? 'Device Online'
+                    : deviceStatus === 'offline'
+                    ? 'Device Offline'
+                    : 'No Device'}
+                </Badge>
+
                 <span className="text-sm text-muted-foreground">
                   {lastActivity}
                 </span>
@@ -112,6 +132,15 @@ export function PatientDetailHeader({
             >
               <Edit className="h-4 w-4" />
               Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowQRModal(true)}
+              className="gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+            >
+              <QrCode className="h-4 w-4" />
+              Setup Device
             </Button>
             <Button
               variant="outline"
@@ -134,6 +163,14 @@ export function PatientDetailHeader({
           </div>
         </div>
       </div>
+
+      {/* QR Code Modal */}
+      <QRCodeModal
+        open={showQRModal}
+        onOpenChange={setShowQRModal}
+        patientId={patient.id}
+        patientName={patient.full_name || `${patient.first_name} ${patient.last_name}`}
+      />
     </div>
   );
 }

@@ -40,6 +40,8 @@ export interface Patient {
   app_version?: string;
   last_active_at?: string;
   last_heartbeat_at?: string;
+  device_setup_completed?: boolean;
+  device_platform?: 'ios' | 'android';
 
   // Status
   is_active: boolean;

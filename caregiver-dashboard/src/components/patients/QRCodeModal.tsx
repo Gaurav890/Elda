@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { QRCodeSVG } from 'qrcode.react';
-import { Download, RefreshCw, X, Clock, AlertCircle } from 'lucide-react';
+import { Download, RefreshCw, Clock, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface QRCodeModalProps {
@@ -44,6 +44,7 @@ export function QRCodeModal({
     if (open && !qrData) {
       generateQRCode();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // Update time remaining countdown
@@ -142,7 +143,7 @@ export function QRCodeModal({
         <DialogHeader>
           <DialogTitle>Device Setup QR Code</DialogTitle>
           <DialogDescription>
-            Scan this QR code with the mobile app to set up {patientName}'s device
+            Scan this QR code with the mobile app to set up {patientName}&apos;s device
           </DialogDescription>
         </DialogHeader>
 
@@ -197,7 +198,7 @@ export function QRCodeModal({
                 <p className="font-medium text-blue-900">Setup Instructions:</p>
                 <ol className="list-decimal list-inside space-y-1 text-blue-800">
                   <li>Open the Elder Companion mobile app</li>
-                  <li>Tap "Scan QR Code" on the welcome screen</li>
+                  <li>Tap &quot;Scan QR Code&quot; on the welcome screen</li>
                   <li>Point camera at this QR code</li>
                   <li>Wait for confirmation</li>
                 </ol>

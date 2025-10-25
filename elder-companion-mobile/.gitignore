@@ -1,0 +1,44 @@
+# OSX
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# React Native
+.gradle
+build/
+.idea
+.vscode
+
+# iOS
+ios/Pods/
+ios/build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+project.xcworkspace/
+
+# Android
+android/.gradle
+android/build/
+android/app/build/
+*.apk
+*.aab
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+
+# Misc
+*.log
+.expo/
+dist/
