@@ -9,6 +9,7 @@ import { PatientOverviewTab } from '@/components/patients/PatientOverviewTab';
 import { PatientRoutineTab } from '@/components/patients/PatientRoutineTab';
 import { PatientConversationsTab } from '@/components/patients/PatientConversationsTab';
 import { PatientAlertsTab } from '@/components/patients/PatientAlertsTab';
+import { PatientReportsTab } from '@/components/patients/PatientReportsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
 
@@ -126,14 +127,7 @@ export default function PatientDetailPage() {
             </TabsContent>
 
             <TabsContent value="reports" className="mt-0">
-              <div className="rounded-lg border bg-white p-8 text-center">
-                <h3 className="text-lg font-semibold mb-2">Reports Tab</h3>
-                <p className="text-sm text-muted-foreground">
-                  This tab will show patient reports and analytics.
-                  <br />
-                  Coming soon
-                </p>
-              </div>
+              <PatientReportsTab patientId={patientId} />
             </TabsContent>
 
             <TabsContent value="conversations" className="mt-0">

@@ -8,6 +8,9 @@ interface GetAlertsResponse {
   total: number;
 }
 
+// In-memory cache for acknowledged alerts (until backend is ready)
+const acknowledgedAlerts = new Set<string>();
+
 // Get all alerts for a patient
 export async function getPatientAlerts(patientId: string): Promise<Alert[]> {
   try {
@@ -18,7 +21,19 @@ export async function getPatientAlerts(patientId: string): Promise<Alert[]> {
   } catch (error) {
     console.error('Error fetching patient alerts:', error);
     // Return mock data for now until backend endpoint is ready
-    return getMockAlerts(patientId);
+    const alerts = getMockAlerts(patientId);
+    // Apply acknowledged status from in-memory cache
+    return alerts.map((alert) => {
+      if (acknowledgedAlerts.has(alert.id)) {
+        return {
+          ...alert,
+          status: AlertStatus.ACKNOWLEDGED,
+          acknowledged_at: new Date().toISOString(),
+          acknowledged_by: 'test@example.com',
+        };
+      }
+      return alert;
+    });
   }
 }
 
@@ -31,7 +46,36 @@ export async function acknowledgeAlert(alertId: string): Promise<Alert> {
     return response.data;
   } catch (error) {
     console.error('Error acknowledging alert:', error);
-    throw error;
+    // Add to acknowledged cache for mock data
+    acknowledgedAlerts.add(alertId);
+
+    // Return mock acknowledged alert until backend is ready
+    // Find the alert in our mock data and return it as acknowledged
+    const mockAlerts = getMockAlerts('');
+    const alert = mockAlerts.find((a) => a.id === alertId);
+
+    if (alert) {
+      return {
+        ...alert,
+        status: AlertStatus.ACKNOWLEDGED,
+        acknowledged_at: new Date().toISOString(),
+        acknowledged_by: 'test@example.com',
+      };
+    }
+
+    // If alert not found, return a generic acknowledged alert
+    return {
+      id: alertId,
+      patient_id: 'unknown',
+      type: AlertType.OTHER,
+      severity: AlertSeverity.LOW,
+      status: AlertStatus.ACKNOWLEDGED,
+      title: 'Acknowledged Alert',
+      description: 'This alert has been acknowledged.',
+      created_at: new Date().toISOString(),
+      acknowledged_at: new Date().toISOString(),
+      acknowledged_by: 'test@example.com',
+    };
   }
 }
 
