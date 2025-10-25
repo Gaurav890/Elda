@@ -18,8 +18,11 @@ import type { Alert, AlertType, AlertSeverity, AlertStatus } from '@/types/alert
 
 interface AlertCardProps {
   alert: Alert;
-  onAcknowledge: (alertId: string) => void;
+  onAcknowledge?: (alertId: string) => void;
   isAcknowledging?: boolean;
+  showPatientName?: boolean;
+  patientName?: string;
+  patientId?: string;
 }
 
 const alertTypeConfig: Record<
@@ -41,7 +44,13 @@ const severityBorderConfig: Record<AlertSeverity, string> = {
   critical: 'border-l-red-500',
 };
 
-export function AlertCard({ alert, onAcknowledge, isAcknowledging }: AlertCardProps) {
+export function AlertCard({
+  alert,
+  onAcknowledge,
+  isAcknowledging,
+  showPatientName,
+  patientName,
+}: AlertCardProps) {
   const [relativeTime, setRelativeTime] = useState<string>('');
   const typeConfig = alertTypeConfig[alert.type];
   const Icon = typeConfig.icon;
@@ -80,6 +89,11 @@ export function AlertCard({ alert, onAcknowledge, isAcknowledging }: AlertCardPr
                 <h3 className="font-semibold text-gray-900">{alert.title}</h3>
                 <SeverityBadge severity={alert.severity} />
               </div>
+              {showPatientName && patientName && (
+                <p className="text-sm font-medium text-gray-700 mb-0.5">
+                  Patient: {patientName}
+                </p>
+              )}
               <p className="text-sm text-gray-500">{relativeTime}</p>
             </div>
           </div>
@@ -106,15 +120,21 @@ export function AlertCard({ alert, onAcknowledge, isAcknowledging }: AlertCardPr
         {/* Footer */}
         <div className="flex items-center justify-between">
           {isActive ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onAcknowledge(alert.id)}
-              disabled={isAcknowledging}
-              className="text-sm"
-            >
-              {isAcknowledging ? 'Acknowledging...' : 'Acknowledge'}
-            </Button>
+            onAcknowledge ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onAcknowledge(alert.id)}
+                disabled={isAcknowledging}
+                className="text-sm"
+              >
+                {isAcknowledging ? 'Acknowledging...' : 'Acknowledge'}
+              </Button>
+            ) : (
+              <div className="text-sm text-gray-500">
+                <span>Active Alert</span>
+              </div>
+            )
           ) : (
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>

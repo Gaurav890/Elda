@@ -10,6 +10,7 @@ import { PatientRoutineTab } from '@/components/patients/PatientRoutineTab';
 import { PatientConversationsTab } from '@/components/patients/PatientConversationsTab';
 import { PatientAlertsTab } from '@/components/patients/PatientAlertsTab';
 import { PatientReportsTab } from '@/components/patients/PatientReportsTab';
+import { PatientNotesTab } from '@/components/patients/PatientNotesTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
 
@@ -139,14 +140,10 @@ export default function PatientDetailPage() {
             </TabsContent>
 
             <TabsContent value="notes" className="mt-0">
-              <div className="rounded-lg border bg-white p-8 text-center">
-                <h3 className="text-lg font-semibold mb-2">Notes to AI Tab</h3>
-                <p className="text-sm text-muted-foreground">
-                  This tab will show notes and instructions for the AI agent.
-                  <br />
-                  Coming soon
-                </p>
-              </div>
+              <PatientNotesTab
+                patientId={patientId}
+                patientName={patient.full_name || patient.display_name || 'this patient'}
+              />
             </TabsContent>
           </div>
         </Tabs>
