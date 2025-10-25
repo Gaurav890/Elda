@@ -41,3 +41,52 @@
 - **Rollback Info** - How to undo changes if needed
 
 ---
+
+### **Resume System**
+
+**This project has a resume/context restoration system. Important:**
+
+**When the user says "resume", "continue", "claude resume", or similar:**
+
+1. **Read these files in order:**
+   - `.claude/SESSION_STATE.md` (current project state - REQUIRED)
+   - Latest file in `snap-memory/` folder (recent work history)
+   - Relevant documentation from `documents/` based on current phase
+
+2. **Check environment:**
+   - Run `git status` and `git log --oneline -10`
+   - Check what directories exist (backend/, mobile/, dashboard/)
+   - Check if any servers are running
+
+3. **Provide context summary to user:**
+   ```markdown
+   ## 🔄 Context Restored
+
+   **Current Phase:** [from SESSION_STATE.md]
+   **Last Updated:** [timestamp from SESSION_STATE.md]
+
+   **Completed:**
+   - [List from SESSION_STATE.md]
+
+   **In Progress:**
+   - [Current task from SESSION_STATE.md]
+
+   **Next Steps:**
+   - [Next 2-3 items from SESSION_STATE.md]
+
+   **Blockers:** [Any blockers or "None"]
+
+   Ready to continue! What would you like to work on?
+   ```
+
+4. **Then ask:** "Would you like to continue with [current task] or work on something else?"
+
+**IMPORTANT: Always update `.claude/SESSION_STATE.md` when:**
+- Completing major tasks
+- Switching between phases
+- Encountering blockers
+- Before ending a work session
+
+**See `.claude/RESUME.md` for detailed protocol.**
+
+---
