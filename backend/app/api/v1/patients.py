@@ -13,12 +13,16 @@ from app.core.dependencies import get_current_user, get_db
 from app.models.caregiver import Caregiver
 from app.models.patient import Patient
 from app.models.relationship import PatientCaregiverRelationship
+from app.models.activity_log import ActivityLog
 from app.schemas.patient import (
     PatientCreate,
     PatientUpdate,
     PatientResponse,
     PatientListResponse,
-    PatientWithRelationship
+    PatientWithRelationship,
+    HeartbeatCreate,
+    ActivityLogResponse,
+    ActivityLogListResponse
 )
 
 router = APIRouter()
@@ -336,3 +340,157 @@ def remove_caregiver_from_patient(
     db.commit()
 
     return None
+
+
+# Activity Monitoring Endpoints
+
+@router.post("/{patient_id}/heartbeat", response_model=ActivityLogResponse, status_code=status.HTTP_201_CREATED)
+def record_patient_activity(
+    patient_id: UUID,
+    activity_data: HeartbeatCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Record patient activity (heartbeat, app events, location updates)
+
+    This endpoint is called by the mobile app to track patient activity:
+    - **Heartbeat**: Regular check-in (every 15 minutes)
+    - **App events**: app_open, app_close
+    - **Location updates**: GPS coordinates
+    - **Battery updates**: Device battery level
+    - **Conversations**: Logged automatically during voice interactions
+    - **Reminder responses**: Logged when patient responds to reminders
+    - **Emergency**: Emergency button press
+
+    **Authentication**: This endpoint is public (called from patient mobile app)
+    but requires valid patient_id
+
+    **Example request:**
+    ```json
+    {
+      "activity_type": "heartbeat",
+      "device_type": "iOS",
+      "app_version": "1.0.0",
+      "latitude": 37.7749,
+      "longitude": -122.4194,
+      "battery_level": 85,
+      "details": {
+        "screen": "home",
+        "last_interaction": "2025-10-24T10:30:00Z"
+      }
+    }
+    ```
+    """
+    # Check if patient exists
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Patient not found"
+        )
+
+    # Create activity log
+    activity_log = ActivityLog(
+        patient_id=patient_id,
+        activity_type=activity_data.activity_type,
+        details=activity_data.details,
+        device_type=activity_data.device_type,
+        app_version=activity_data.app_version,
+        latitude=activity_data.latitude,
+        longitude=activity_data.longitude,
+        battery_level=activity_data.battery_level
+    )
+
+    db.add(activity_log)
+
+    # Update patient's last_active_at timestamp
+    patient.last_active_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(activity_log)
+
+    return activity_log
+
+
+@router.get("/{patient_id}/activity", response_model=ActivityLogListResponse)
+def get_patient_activity(
+    patient_id: UUID,
+    limit: int = 100,
+    offset: int = 0,
+    activity_type: str = None,
+    current_user: Caregiver = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get patient activity history
+
+    Returns paginated list of activity logs for a patient.
+
+    **Query Parameters:**
+    - **limit**: Maximum number of records to return (default: 100, max: 500)
+    - **offset**: Number of records to skip (default: 0)
+    - **activity_type**: Filter by activity type (heartbeat, conversation, etc.)
+
+    **Filters by Activity Type:**
+    - `heartbeat` - Regular check-ins
+    - `conversation` - Voice interactions
+    - `reminder_response` - Reminder completions
+    - `emergency` - Emergency button presses
+    - `app_open` / `app_close` - App lifecycle events
+    - `location_update` - GPS updates
+    - `battery_update` - Battery level changes
+
+    **Example:**
+    ```
+    GET /api/v1/patients/{id}/activity?limit=50&activity_type=heartbeat
+    ```
+
+    **Response includes:**
+    - Total count of matching records
+    - Paginated list of activity logs
+    - Patient ID for reference
+    """
+    # Check if patient exists
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Patient not found"
+        )
+
+    # Check if caregiver has access
+    relationship = db.query(PatientCaregiverRelationship).filter(
+        PatientCaregiverRelationship.patient_id == patient_id,
+        PatientCaregiverRelationship.caregiver_id == current_user.id
+    ).first()
+
+    if not relationship:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this patient"
+        )
+
+    # Validate and cap limit
+    if limit > 500:
+        limit = 500
+
+    # Build query
+    query = db.query(ActivityLog).filter(ActivityLog.patient_id == patient_id)
+
+    # Apply activity_type filter if provided
+    if activity_type:
+        query = query.filter(ActivityLog.activity_type == activity_type)
+
+    # Get total count
+    total = query.count()
+
+    # Get paginated results (ordered by most recent first)
+    activities = query.order_by(
+        ActivityLog.logged_at.desc()
+    ).limit(limit).offset(offset).all()
+
+    return ActivityLogListResponse(
+        total=total,
+        activities=activities,
+        patient_id=patient_id
+    )

@@ -32,22 +32,37 @@ class Patient(Base):
     last_name = Column(String(100), nullable=False)
     preferred_name = Column(String(100), nullable=True)  # What they like to be called
     date_of_birth = Column(Date, nullable=False)
+    gender = Column(String(20), nullable=True)
+    phone_number = Column(String(20), nullable=True)
+    address = Column(Text, nullable=True)
+    emergency_contact_name = Column(String(100), nullable=True)
+    emergency_contact_phone = Column(String(20), nullable=True)
 
     # Medical & Personal Context
     medical_conditions = Column(ARRAY(String), default=list)  # ["diabetes", "hypertension"]
     medications = Column(ARRAY(String), default=list)  # ["Metformin 500mg", "Lisinopril 10mg"]
     allergies = Column(ARRAY(String), default=list)  # ["penicillin", "peanuts"]
+    dietary_restrictions = Column(ARRAY(String), default=list)  # ["vegetarian", "low-sodium"]
 
     # Personal context for AI (family, hobbies, preferences)
     personal_context = Column(JSON, default=dict)
     # Example: {"family": "2 daughters", "hobbies": ["gardening", "reading"], "favorite_food": "pasta"}
+
+    # Personalization Settings
+    profile_photo_url = Column(String(500), nullable=True)  # URL to profile photo
+    timezone = Column(String(50), default="UTC", nullable=False)  # Patient's timezone
+    preferred_voice = Column(String(20), default="neutral", nullable=False)  # male/female/neutral
+    communication_style = Column(String(20), default="friendly", nullable=False)  # friendly/formal/casual
+    language = Column(String(10), default="en", nullable=False)  # ISO 639-1 language code
 
     # AI Integration
     letta_agent_id = Column(String(255), nullable=True, unique=True)  # Letta Cloud agent ID
 
     # Mobile App
     device_token = Column(String(255), nullable=True)  # Firebase device token for push notifications
+    app_version = Column(String(20), nullable=True)  # Mobile app version (e.g., 1.0.0)
     last_active_at = Column(DateTime, nullable=True)  # Last time patient interacted with app
+    last_heartbeat_at = Column(DateTime, nullable=True)  # Last heartbeat from mobile app
 
     # Status
     is_active = Column(Boolean, default=True, nullable=False)

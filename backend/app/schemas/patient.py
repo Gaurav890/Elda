@@ -46,6 +46,13 @@ class PatientUpdate(BaseModel):
     allergies: Optional[List[str]] = None
     dietary_restrictions: Optional[List[str]] = None
     personal_context: Optional[Dict[str, Any]] = None
+    # Phase 2: Personalization fields
+    profile_photo_url: Optional[str] = Field(None, max_length=500)
+    timezone: Optional[str] = Field(None, max_length=50)
+    preferred_voice: Optional[Literal["male", "female", "neutral"]] = None
+    communication_style: Optional[Literal["friendly", "formal", "casual"]] = None
+    language: Optional[str] = Field(None, max_length=10, description="ISO 639-1 language code")
+    app_version: Optional[str] = Field(None, max_length=20)
 
 
 class PatientResponse(PatientBase):
@@ -56,9 +63,21 @@ class PatientResponse(PatientBase):
     allergies: List[str]
     dietary_restrictions: List[str]
     personal_context: Dict[str, Any]
+    # Phase 2: Personalization fields
+    profile_photo_url: Optional[str]
+    timezone: str
+    preferred_voice: str
+    communication_style: str
+    language: str
+    # Mobile app fields
     letta_agent_id: Optional[str]
     device_token: Optional[str]
+    app_version: Optional[str]
     last_active_at: Optional[datetime]
+    last_heartbeat_at: Optional[datetime]
+    # Status
+    is_active: bool
+    # Timestamps
     created_at: datetime
     updated_at: Optional[datetime]
 

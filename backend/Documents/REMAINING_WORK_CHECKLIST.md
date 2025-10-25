@@ -6,26 +6,29 @@
 ---
 
 ## Quick Wins (High Impact, Low Effort) 🎯
-
-### Phase 1: Activity Monitoring (30 minutes)
-- [ ] Add POST `/api/v1/patients/{id}/heartbeat` endpoint
-- [ ] Add GET `/api/v1/patients/{id}/activity` endpoint
-- [ ] Test activity logging
-- [ ] Update activity_log model if needed
+ Activity Monitoring ✅ COMPLETED (30 minutes)
+- [x] Add POST `/api/v1/patients/{id}/heartbeat` endpoint
+- [x] Add GET `/api/v1/patients/{id}/activity` endpoint
+- [x] Create HeartbeatCreate, ActivityLogResponse, ActivityLogListResponse schemas
+- [x] Add pagination and filtering support
+- [x] Test activity logging
+- [x] ActivityLog model verified (no updates needed)
 
 **Why:** Critical for detecting patient inactivity, already have the table
 
-### Phase 2: Enhanced Patient Profile (45 minutes)
-- [ ] Add `profile_photo_url` field to patients table
-- [ ] Add `timezone` field to patients table (default: UTC)
-- [ ] Add `preferred_voice` field (male/female/neutral)
-- [ ] Add `communication_style` field (friendly/formal/casual)
-- [ ] Add `language` field (default: en)
-- [ ] Add `app_version` field
-- [ ] Add `last_heartbeat_at` field
-- [ ] Create migration for new fields
-- [ ] Update patient schemas
-- [ ] Update patient endpoints
+### Phase 2: Enhanced Patient Profile ✅ COMPLETED (45 minutes)
+- [x] Add `profile_photo_url` field to patients table
+- [x] Add `timezone` field to patients table (default: UTC)
+- [x] Add `preferred_voice` field (male/female/neutral)
+- [x] Add `communication_style` field (friendly/formal/casual)
+- [x] Add `language` field (default: en)
+- [x] Add `app_version` field
+- [x] Add `last_heartbeat_at` field
+- [x] Add missing basic fields (gender, phone, address, emergency contact, dietary restrictions)
+- [x] Create migration (7ccebe398c0e) for 13 new fields
+- [x] Update patient model with all fields
+- [x] Update patient schemas with validation
+- [x] Test all functionality
 
 **Why:** Makes the system more personalized and production-ready
 
