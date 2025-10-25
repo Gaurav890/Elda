@@ -4,7 +4,7 @@ Pydantic schemas for patient endpoints
 
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime, date
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 from uuid import UUID
 
 
@@ -84,3 +84,48 @@ class PatientWithRelationship(PatientResponse):
     relationship_created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Activity Monitoring Schemas
+
+class HeartbeatCreate(BaseModel):
+    """Schema for creating a heartbeat activity log"""
+    activity_type: Literal[
+        "heartbeat",
+        "conversation",
+        "reminder_response",
+        "emergency",
+        "app_open",
+        "app_close",
+        "location_update",
+        "battery_update"
+    ] = "heartbeat"
+    details: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    device_type: Optional[str] = Field(None, max_length=20, description="iOS or Android")
+    app_version: Optional[str] = Field(None, max_length=20, description="App version (e.g., 1.0.0)")
+    latitude: Optional[float] = Field(None, ge=-90, le=90, description="Latitude coordinate")
+    longitude: Optional[float] = Field(None, ge=-180, le=180, description="Longitude coordinate")
+    battery_level: Optional[int] = Field(None, ge=0, le=100, description="Battery level (0-100)")
+
+
+class ActivityLogResponse(BaseModel):
+    """Schema for activity log response"""
+    id: UUID
+    patient_id: UUID
+    activity_type: str
+    details: Dict[str, Any]
+    device_type: Optional[str]
+    app_version: Optional[str]
+    latitude: Optional[float]
+    longitude: Optional[float]
+    battery_level: Optional[int]
+    logged_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ActivityLogListResponse(BaseModel):
+    """Schema for paginated activity log list"""
+    total: int
+    activities: List[ActivityLogResponse]
+    patient_id: UUID

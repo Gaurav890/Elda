@@ -2,7 +2,7 @@
 Caregiver model - Family members or professional caregivers
 """
 
-from sqlalchemy import Column, String, Boolean, DateTime
+from sqlalchemy import Column, String, Boolean, DateTime, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -43,6 +43,15 @@ class Caregiver(Base):
     sms_notifications_enabled = Column(Boolean, default=True, nullable=False)
     email_notifications_enabled = Column(Boolean, default=True, nullable=False)
     push_notifications_enabled = Column(Boolean, default=True, nullable=False)
+
+    # Advanced Preferences (JSONB)
+    # Structure: {
+    #   "notifications": {"email": true, "sms": true, "push": false},
+    #   "alert_threshold": "medium",  # low, medium, high, critical
+    #   "quiet_hours": {"enabled": true, "start": "22:00", "end": "07:00"},
+    #   "daily_summary_time": "20:00"
+    # }
+    preferences = Column(JSON, default=dict, nullable=False)
 
     # Status
     is_active = Column(Boolean, default=True, nullable=False)

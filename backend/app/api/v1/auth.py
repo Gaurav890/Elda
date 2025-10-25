@@ -18,7 +18,9 @@ from app.schemas.auth import (
     CaregiverUpdate,
     TokenResponse,
     TokenRefresh,
-    PasswordChange
+    PasswordChange,
+    CaregiverPreferences,
+    CaregiverPreferencesUpdate
 )
 
 router = APIRouter()
@@ -210,3 +212,77 @@ def change_password(
     db.commit()
 
     return {"message": "Password changed successfully"}
+
+
+@router.get("/me/preferences", response_model=CaregiverPreferences)
+def get_caregiver_preferences(
+    current_user: Caregiver = Depends(get_current_user)
+):
+    """
+    Get current caregiver's advanced preferences
+
+    Returns the advanced preferences with default values if not set
+    """
+    # Return preferences with default structure if empty
+    if not current_user.preferences:
+        return CaregiverPreferences()
+
+    # Parse existing preferences into the schema
+    return CaregiverPreferences(**current_user.preferences)
+
+
+@router.patch("/me/preferences", response_model=CaregiverPreferences)
+def update_caregiver_preferences(
+    preferences_update: CaregiverPreferencesUpdate,
+    current_user: Caregiver = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update caregiver's advanced preferences
+
+    Supports partial updates - only provided fields will be updated.
+
+    **Preference Structure:**
+    - **notifications**: Channel preferences (email, sms, push)
+    - **alert_threshold**: Minimum severity level (low, medium, high, critical)
+    - **quiet_hours**: Do not disturb configuration (enabled, start time, end time)
+    - **daily_summary_time**: Time for daily summary generation (HH:MM format)
+
+    **Example:**
+    ```json
+    {
+      "notifications": {
+        "email": true,
+        "sms": true,
+        "push": false
+      },
+      "alert_threshold": "medium",
+      "quiet_hours": {
+        "enabled": true,
+        "start": "22:00",
+        "end": "07:00"
+      },
+      "daily_summary_time": "20:00"
+    }
+    ```
+    """
+    # Get current preferences or initialize with defaults
+    current_prefs = current_user.preferences if current_user.preferences else {}
+
+    # Convert to CaregiverPreferences model for easier manipulation
+    current_preferences_model = CaregiverPreferences(**current_prefs) if current_prefs else CaregiverPreferences()
+
+    # Update only provided fields (partial update)
+    update_dict = preferences_update.model_dump(exclude_unset=True)
+
+    for field, value in update_dict.items():
+        if value is not None:
+            setattr(current_preferences_model, field, value)
+
+    # Save updated preferences back to database
+    current_user.preferences = current_preferences_model.model_dump()
+    current_user.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(current_user)
+
+    return current_preferences_model

@@ -29,11 +29,13 @@
 
 **Why:** Makes the system more personalized and production-ready
 
-### Phase 3: Advanced Caregiver Preferences (30 minutes)
-- [ ] Add `preferences` JSONB field to caregivers table
-- [ ] Create migration
-- [ ] Update caregiver schema to include preferences structure
-- [ ] Add endpoint to update preferences
+### Phase 3: Advanced Caregiver Preferences ✅ COMPLETED (30 minutes)
+- [x] Add `preferences` JSONB field to caregivers table
+- [x] Create migration (8ab72b20f47b)
+- [x] Update caregiver schema to include preferences structure
+- [x] Add endpoints: GET and PATCH /api/v1/auth/me/preferences
+- [x] Add comprehensive Pydantic validation schemas
+- [x] Test all functionality
 
 **Preferences structure:**
 ```json
