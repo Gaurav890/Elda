@@ -14,9 +14,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from app.core.config import settings
-# TODO: Import base and all models when created
-# from app.database.base import Base
-# from app.models import patient, caregiver, relationship, schedule, reminder, conversation, daily_summary, alert, insight, activity_log, system_log
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -33,6 +30,20 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from app.database.base import Base
+
+# Import all models so Alembic can detect them
+from app.models.patient import Patient
+from app.models.caregiver import Caregiver
+from app.models.relationship import PatientCaregiverRelationship
+from app.models.schedule import Schedule
+from app.models.reminder import Reminder
+from app.models.conversation import Conversation
+from app.models.daily_summary import DailySummary
+from app.models.alert import Alert
+from app.models.insight import PatientInsight
+from app.models.activity_log import ActivityLog
+from app.models.system_log import SystemLog
+
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

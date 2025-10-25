@@ -28,16 +28,33 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Elder Companion AI Backend")
     logger.info(f"Environment: {settings.APP_ENV}")
 
-    # TODO: Initialize database connection
-    # TODO: Initialize APScheduler for background jobs
-    # TODO: Initialize AI services (Claude, Letta, Chroma)
+    # Initialize AI services
+    try:
+        from app.services.chroma_service import chroma_service
+        logger.info("Chroma service initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize Chroma service: {e}")
+
+    # Initialize background job scheduler
+    try:
+        from app.jobs.scheduler import start_scheduler
+        start_scheduler()
+        logger.info("Background job scheduler started")
+    except Exception as e:
+        logger.error(f"Failed to start scheduler: {e}")
 
     yield
 
     # Shutdown
     logger.info("Shutting down Elder Companion AI Backend")
-    # TODO: Close database connections
-    # TODO: Shutdown APScheduler
+
+    # Shutdown background scheduler
+    try:
+        from app.jobs.scheduler import shutdown_scheduler
+        shutdown_scheduler()
+        logger.info("Background job scheduler stopped")
+    except Exception as e:
+        logger.error(f"Error stopping scheduler: {e}")
 
 
 # Create FastAPI app
@@ -77,6 +94,16 @@ async def health_check():
     )
 
 
+# Scheduler status endpoint
+@app.get("/admin/scheduler", tags=["Admin"])
+async def scheduler_status():
+    """
+    Get background job scheduler status
+    """
+    from app.jobs.scheduler import get_scheduler_status
+    return get_scheduler_status()
+
+
 # Root endpoint
 @app.get("/", tags=["Root"])
 async def root():
@@ -91,17 +118,16 @@ async def root():
     }
 
 
-# TODO: Include routers
-# from app.api.v1 import auth, patients, schedules, reminders, conversations, alerts, summaries, insights, mobile
-# app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
-# app.include_router(patients.router, prefix="/api/v1/patients", tags=["Patients"])
-# app.include_router(schedules.router, prefix="/api/v1/schedules", tags=["Schedules"])
-# app.include_router(reminders.router, prefix="/api/v1/reminders", tags=["Reminders"])
-# app.include_router(conversations.router, prefix="/api/v1/conversations", tags=["Conversations"])
-# app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["Alerts"])
-# app.include_router(summaries.router, prefix="/api/v1/summaries", tags=["Summaries"])
-# app.include_router(insights.router, prefix="/api/v1/insights", tags=["Insights"])
-# app.include_router(mobile.router, prefix="/api/v1/mobile", tags=["Mobile"])
+# Include API routers
+from app.api.v1 import auth, patients, schedules, conversations, voice
+
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(patients.router, prefix="/api/v1/patients", tags=["Patients"])
+app.include_router(schedules.router, prefix="/api/v1/schedules", tags=["Schedules"])
+app.include_router(conversations.router, prefix="/api/v1/conversations", tags=["Conversations"])
+app.include_router(voice.router, prefix="/api/v1/voice", tags=["Voice Interaction"])
+
+# TODO: Push notification endpoints
 
 
 if __name__ == "__main__":
