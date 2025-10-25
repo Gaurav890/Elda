@@ -1,8 +1,8 @@
 # 📊 Current Session State
 
-**Last Updated:** 2025-10-24 20:45 (Epoch: 1761364000)
-**Current Phase:** Backend Development - Phase 1 Complete
-**Status:** 🟢 Backend Setup Complete - Ready for Database Models
+**Last Updated:** 2025-10-24 22:10 (Epoch: 1761369000)
+**Current Phase:** Backend Development - Phase 3 (Core API Endpoints)
+**Status:** 🟢 Database Complete - Ready for API Development
 
 ---
 
@@ -83,9 +83,12 @@
 
 ## 🚧 What's In Progress
 
-**Current Task:** Backend Development - Phase 2 (Database Models & Migrations) - ✅ COMPLETE
+**Current Task:** Backend Development - Phase 3 (Core API Endpoints)
 
-**Next Immediate Task:** Backend Phase 3 - Core API Endpoints
+**Next Immediate Task:** Create Authentication Endpoints (3.1)
+- Start with `app/schemas/auth.py` for Pydantic models
+- Then `app/api/v1/endpoints/auth.py` for register/login/refresh
+- Test with Postman before moving to patients
 
 ---
 
@@ -134,12 +137,91 @@
 - [x] Apply migration to local database (COMPLETED - all 12 tables created)
 - [x] Test database connection (COMPLETED - CRUD operations verified)
 
-### Backend Phase 3: Core API Endpoints (After Phase 2)
-- [ ] Set up FastAPI app structure
-- [ ] Implement authentication endpoints
-- [ ] Implement patient CRUD endpoints
-- [ ] Implement schedule endpoints
-- [ ] Test with Postman
+### Backend Phase 3: Core API Endpoints (CURRENT - Start Here)
+**Estimated Time:** 6-8 hours
+**Approach:** Build incrementally - Auth → Patients → Schedules, testing each before moving on
+
+#### 3.1 Authentication Endpoints (START HERE - 1.5 hours)
+- [ ] Create `app/schemas/auth.py` with Pydantic models:
+  - RegisterRequest (email, password, first_name, last_name, phone)
+  - LoginRequest (email, password)
+  - TokenResponse (access_token, refresh_token, token_type)
+  - RefreshRequest (refresh_token)
+- [ ] Create `app/api/v1/endpoints/auth.py` with endpoints:
+  - POST `/api/v1/auth/register` - Create caregiver account
+  - POST `/api/v1/auth/login` - Login and return JWT tokens
+  - POST `/api/v1/auth/refresh` - Refresh access token
+  - POST `/api/v1/auth/logout` - Logout (optional)
+- [ ] Create `app/api/v1/router.py` to register all API routes
+- [ ] Update `app/main.py` to include API router
+- [ ] Test in Postman/curl:
+  - Register new caregiver
+  - Login and get tokens
+  - Test protected endpoint with token
+  - Refresh token before expiry
+
+#### 3.2 Patient CRUD Endpoints (After Auth - 2 hours)
+- [ ] Create `app/schemas/patient.py` with Pydantic models:
+  - PatientCreate (first_name, last_name, date_of_birth, etc.)
+  - PatientUpdate (partial update model)
+  - PatientResponse (full patient with relationships)
+  - PatientList (simplified for list view)
+- [ ] Create `app/api/v1/endpoints/patients.py` with endpoints:
+  - GET `/api/v1/patients` - List all patients (requires auth)
+  - POST `/api/v1/patients` - Create patient (requires auth)
+  - GET `/api/v1/patients/{id}` - Get patient details
+  - PUT `/api/v1/patients/{id}` - Update patient
+  - DELETE `/api/v1/patients/{id}` - Soft delete patient
+- [ ] Add to router in `app/api/v1/router.py`
+- [ ] Test in Postman:
+  - Create 2-3 test patients
+  - List all patients
+  - Get single patient
+  - Update patient info
+  - Delete patient
+
+#### 3.3 Schedule CRUD Endpoints (After Patients - 2 hours)
+- [ ] Create `app/schemas/schedule.py` with Pydantic models:
+  - ScheduleCreate (type, title, scheduled_time, medication_name, etc.)
+  - ScheduleUpdate (partial update model)
+  - ScheduleResponse (full schedule details)
+- [ ] Create `app/api/v1/endpoints/schedules.py` with endpoints:
+  - GET `/api/v1/patients/{patient_id}/schedules` - List schedules
+  - POST `/api/v1/patients/{patient_id}/schedules` - Create schedule
+  - GET `/api/v1/schedules/{id}` - Get schedule details
+  - PUT `/api/v1/schedules/{id}` - Update schedule
+  - DELETE `/api/v1/schedules/{id}` - Delete schedule
+- [ ] Add to router
+- [ ] Test in Postman:
+  - Create medication schedule for patient
+  - Create meal schedule for patient
+  - List all schedules for patient
+  - Update schedule time
+  - Delete schedule
+
+#### 3.4 Postman Collection Setup (Throughout - 30 min)
+- [ ] Create Postman collection "Elda Backend API"
+- [ ] Create environment variables:
+  - base_url: http://localhost:8000
+  - access_token: (set after login)
+  - refresh_token: (set after login)
+- [ ] Add pre-request scripts for auth token
+- [ ] Document all endpoints with examples
+- [ ] Export collection to `backend/postman/`
+
+#### 3.5 Testing & Verification (After All Endpoints - 1 hour)
+- [ ] Full authentication flow works
+- [ ] Protected endpoints reject invalid tokens
+- [ ] Can create patients and assign to logged-in caregiver
+- [ ] Can create schedules for patients
+- [ ] Error handling returns proper status codes (400, 401, 404, 500)
+- [ ] Response validation works (Pydantic schemas)
+
+**Why This Order?**
+1. Auth first - needed to protect all other endpoints
+2. Patients second - core entity, schedules depend on it
+3. Schedules third - depends on patients existing
+4. Test incrementally - catch issues early
 
 ### Backend Phase 4: AI Service Integration (After Phase 3)
 - [ ] Implement Claude service
@@ -170,9 +252,9 @@
 
 ### Created Directories
 - ✅ `/Users/gaurav/Elda/documents/` (8 documentation files)
-- ✅ `/Users/gaurav/Elda/snap-memory/` (1 snap memory file)
+- ✅ `/Users/gaurav/Elda/snap-memory/` (2 snap memory files)
 - ✅ `/Users/gaurav/Elda/.claude/` (resume system files)
-- ✅ `/Users/gaurav/Elda/backend/` (complete structure with 24 files)
+- ✅ `/Users/gaurav/Elda/backend/` (complete structure with 24 files + database ready)
 
 ### Not Yet Created
 - ❌ `/Users/gaurav/Elda/mobile/` (future)
