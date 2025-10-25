@@ -64,6 +64,12 @@ class Patient(Base):
     last_active_at = Column(DateTime, nullable=True)  # Last time patient interacted with app
     last_heartbeat_at = Column(DateTime, nullable=True)  # Last heartbeat from mobile app
 
+    # Mobile Setup (QR Code)
+    setup_token = Column(String(255), nullable=True)  # One-time token for device setup
+    setup_token_expires = Column(DateTime, nullable=True)  # Token expiry timestamp
+    device_setup_completed = Column(Boolean, default=False, nullable=False)  # Setup completion flag
+    device_platform = Column(String(20), nullable=True)  # iOS or Android
+
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
 

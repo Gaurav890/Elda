@@ -5,8 +5,9 @@ import { Patient } from '@/types/patient';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Bell, Zap } from 'lucide-react';
+import { Edit, Bell, Zap, QrCode, Smartphone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { QRCodeModal } from './QRCodeModal';
 
 interface PatientDetailHeaderProps {
   patient: Patient;
@@ -24,14 +25,36 @@ export function PatientDetailHeader({
   // Get initials for avatar fallback
   const initials = `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
 
+  // QR Code modal state
+  const [showQRModal, setShowQRModal] = useState(false);
+
   // Fix hydration issue: Calculate time on client only
   const [lastActivity, setLastActivity] = useState('No recent activity');
+  const [deviceStatus, setDeviceStatus] = useState<'online' | 'offline' | 'never'>('never');
 
   useEffect(() => {
     if (patient.last_active_at) {
       setLastActivity(`Active ${formatDistanceToNow(new Date(patient.last_active_at), { addSuffix: true })}`);
     }
-  }, [patient.last_active_at]);
+
+    // Determine device status based on last_heartbeat_at
+    if (patient.last_heartbeat_at) {
+      const lastHeartbeat = new Date(patient.last_heartbeat_at);
+      const now = new Date();
+      const minutesSinceHeartbeat = (now.getTime() - lastHeartbeat.getTime()) / (1000 * 60);
+
+      // Consider online if heartbeat within 30 minutes (2x heartbeat interval)
+      if (minutesSinceHeartbeat <= 30) {
+        setDeviceStatus('online');
+      } else {
+        setDeviceStatus('offline');
+      }
+    } else if (patient.device_setup_completed) {
+      setDeviceStatus('offline');
+    } else {
+      setDeviceStatus('never');
+    }
+  }, [patient.last_active_at, patient.last_heartbeat_at, patient.device_setup_completed]);
 
   return (
     <div className="border-b bg-white">

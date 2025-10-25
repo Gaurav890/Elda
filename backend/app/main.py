@@ -119,7 +119,7 @@ async def root():
 
 
 # Include API routers
-from app.api.v1 import auth, patients, schedules, conversations, voice, notes, activity, reports, letta
+from app.api.v1 import auth, patients, schedules, conversations, voice, notes, activity, reports, letta, mobile
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(patients.router, prefix="/api/v1/patients", tags=["Patients"])
@@ -130,8 +130,7 @@ app.include_router(notes.router, prefix="/api/v1", tags=["Caregiver Notes"])
 app.include_router(activity.router, prefix="/api/v1", tags=["Activity Logs"])
 app.include_router(reports.router, prefix="/api/v1", tags=["Reports"])
 app.include_router(letta.router, prefix="/api/v1/letta", tags=["Letta AI Integration"])
-
-# TODO: Push notification endpoints
+app.include_router(mobile.router, prefix="/api/v1/mobile", tags=["Mobile App"])
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ Handles patient CRUD operations and caregiver relationships
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from app.core.dependencies import get_current_user, get_db
@@ -24,6 +24,9 @@ from app.schemas.patient import (
     ActivityLogResponse,
     ActivityLogListResponse
 )
+from app.schemas.mobile import QRCodeGenerateResponse
+import secrets
+import json
 
 router = APIRouter()
 
@@ -498,4 +501,81 @@ def get_patient_activity(
         total=total,
         activities=activities,
         patient_id=patient_id
+    )
+
+
+# Mobile Device Setup Endpoints
+
+@router.post("/{patient_id}/generate-code", response_model=QRCodeGenerateResponse)
+def generate_patient_setup_code(
+    patient_id: UUID,
+    current_user: Caregiver = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Generate one-time setup code for mobile app
+
+    Creates a QR code containing patient_id and setup_token.
+    The setup token expires in 15 minutes.
+
+    **Workflow:**
+    1. Caregiver creates patient in dashboard
+    2. Caregiver clicks "Generate Device Code"
+    3. Backend generates secure token
+    4. Dashboard displays QR code
+    5. Patient scans QR with mobile app
+
+    **Security:**
+    - Token expires in 15 minutes
+    - One-time use only
+    - Invalidated after successful setup
+
+    **Returns:**
+    - QR code data (JSON string)
+    - Setup token
+    - Patient ID
+    - Expiry time
+    """
+    # Check if patient exists
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Patient not found"
+        )
+
+    # Check if caregiver has access to this patient
+    relationship = db.query(PatientCaregiverRelationship).filter(
+        PatientCaregiverRelationship.patient_id == patient_id,
+        PatientCaregiverRelationship.caregiver_id == current_user.id
+    ).first()
+
+    if not relationship:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this patient"
+        )
+
+    # Generate unique setup token (expires in 15 min)
+    setup_token = secrets.token_urlsafe(32)
+    expiry_time = datetime.utcnow() + timedelta(minutes=15)
+
+    # Update patient with setup token
+    patient.setup_token = setup_token
+    patient.setup_token_expires = expiry_time
+    patient.device_setup_completed = False  # Reset if regenerating
+
+    db.commit()
+
+    # Create QR code data (JSON string)
+    qr_code_data = json.dumps({
+        "patient_id": str(patient.id),
+        "setup_token": setup_token
+    })
+
+    return QRCodeGenerateResponse(
+        qr_code_data=qr_code_data,
+        setup_token=setup_token,
+        expires_in_minutes=15,
+        patient_id=patient.id
     )
