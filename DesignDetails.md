@@ -1,7 +1,3 @@
-
-
-
-
 0) Design System (tokens, colors, fonts, motion)
 
 Tone: Hybrid (warm + professional). Calm, trustworthy, human.
