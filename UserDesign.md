@@ -1,3 +1,11 @@
+You are an expert mobile UX/UI designer. 
+Design the complete front end for the “Elder Companion AI” patient mobile app.
+
+Goal:
+Deliver an accessible, voice-first interface that elderly users can operate easily.
+
+---
+
 
 # 1. Brand & Visual System
 

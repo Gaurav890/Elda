@@ -1,3 +1,10 @@
+You are an expert front-end designer and engineer. 
+Design the entire front end (UI only, no backend code) for the web application “Elder Companion AI – Caregiver Dashboard.”
+
+Goal:
+Deliver polished, senior-level UX with all states, components, and responsive behavior ready for implementation.
+
+---
 
 # 1. Brand & Visual Language
 
