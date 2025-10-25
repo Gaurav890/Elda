@@ -29,6 +29,7 @@ from app.schemas.conversation import (
     InsightCreate,
     InsightResponse
 )
+from app.schemas.insight import PatientInsightListResponse
 
 router = APIRouter()
 
@@ -432,22 +433,34 @@ def create_insight(
     return new_insight
 
 
-@router.get("/patients/{patient_id}/insights", response_model=List[InsightResponse])
+@router.get("/patients/{patient_id}/insights", response_model=PatientInsightListResponse)
 def list_insights(
     patient_id: UUID,
-    insight_type: Optional[str] = Query(None),
-    min_confidence: float = Query(0.0, ge=0.0, le=1.0),
+    insight_type: Optional[str] = Query(None, description="Filter by insight type"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    min_confidence: float = Query(0.0, ge=0.0, le=1.0, description="Minimum confidence score"),
+    limit: int = Query(10, le=100, ge=1, description="Maximum number of insights to return"),
+    offset: int = Query(0, ge=0, description="Number of insights to skip"),
     current_user: Caregiver = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Get insights for a patient
 
-    - Optionally filter by type
-    - Optionally filter by minimum confidence score
-    - Returns most recent first
+    - Returns last 10 insights by default
+    - Optionally filter by type, category, and minimum confidence score
+    - Supports pagination via limit/offset
+    - Orders by confidence score (high to low), then by most recent
+    - Verifies caregiver has access to patient
     """
-    # Check access
+    # Check if patient exists and caregiver has access
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Patient not found"
+        )
+
     relationship = db.query(PatientCaregiverRelationship).filter(
         PatientCaregiverRelationship.patient_id == patient_id,
         PatientCaregiverRelationship.caregiver_id == current_user.id
@@ -459,14 +472,37 @@ def list_insights(
             detail="Access denied to this patient"
         )
 
-    # Build query
-    query = db.query(PatientInsight).filter(PatientInsight.patient_id == patient_id)
+    # Build query - only active insights
+    query = db.query(PatientInsight).filter(
+        PatientInsight.patient_id == patient_id,
+        PatientInsight.is_active == True
+    )
 
+    # Apply filters
     if insight_type:
         query = query.filter(PatientInsight.insight_type == insight_type)
 
+    if category:
+        query = query.filter(PatientInsight.category == category)
+
+    # Filter by minimum confidence
     query = query.filter(PatientInsight.confidence_score >= min_confidence)
 
-    insights = query.order_by(PatientInsight.created_at.desc()).all()
+    # Get total count
+    total = query.count()
 
-    return insights
+    # Order by confidence score (high to low), then by most recent
+    query = query.order_by(
+        PatientInsight.confidence_score.desc(),
+        PatientInsight.generated_at.desc()
+    )
+
+    # Apply pagination
+    insights = query.offset(offset).limit(limit).all()
+
+    return PatientInsightListResponse(
+        insights=insights,
+        total=total,
+        limit=limit,
+        offset=offset
+    )
