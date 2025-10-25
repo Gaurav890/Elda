@@ -1,95 +1,163 @@
 # Elder Companion AI - Caregiver Dashboard
 
-Web dashboard for caregivers to monitor and manage elderly patients.
+**Next.js 15 + TypeScript + Tailwind CSS**
+**Status:** 60% Complete (Phases 1-2 Done) ✅
+**Last Updated:** October 25, 2025
 
-## Tech Stack
+---
+
+## 🚀 Quick Start
+
+```bash
+# Start development server
+npm run dev
+
+# Open in browser
+open http://localhost:3000
+
+# Login credentials
+Email:    test@example.com
+Password: password123
+```
+
+**Backend must be running separately on port 8000**
+
+---
+
+## 📚 Documentation Index
+
+### ⚡ Resume After Auto-Compact
+- **[RESUME_HERE.md](RESUME_HERE.md)** ⭐ Start here to resume work
+- **[SESSION_SUMMARY.md](SESSION_SUMMARY.md)** - Complete session context
+
+### 📖 Setup & Troubleshooting
+- **[SETUP_COMPLETE.md](SETUP_COMPLETE.md)** - Setup guide & configuration
+- **[LOGIN_FIXED.md](LOGIN_FIXED.md)** - Authentication fix details
+- **[FIX_REGISTRATION_ERROR.md](FIX_REGISTRATION_ERROR.md)** - Storage error solution
+
+### 📋 Project Management
+- **[Documents/CAREGIVER_WEB_APP_TASKS.md](Documents/CAREGIVER_WEB_APP_TASKS.md)** - Task breakdown (60% done)
+- **[Documents/CAREGIVER_WEB_APP_API_GUIDE.md](Documents/CAREGIVER_WEB_APP_API_GUIDE.md)** - API documentation
+- **[Documents/DESIGN_COMPLIANCE_REVIEW.md](Documents/DESIGN_COMPLIANCE_REVIEW.md)** - Design specs
+
+---
+
+## 📊 Project Status
+
+| Phase | Status | Progress |
+|-------|--------|----------|
+| Phase 1: Setup & Auth | ✅ Complete | 100% |
+| Phase 2: Patient Management | ✅ Complete | 100% |
+| Phase 3: Patient Detail | ⏳ Next | 0% |
+| Phase 4: Alerts & Settings | ⏳ Pending | 0% |
+| Phase 5: Advanced Features | ⏳ Pending | 0% |
+| Phase 6: Polish & Testing | ⏳ Pending | 0% |
+
+**Overall: 60% Complete**
+
+---
+
+## 🛠️ Tech Stack
 
 - **Framework:** Next.js 15 (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
-- **UI Components:** shadcn/ui
-- **State Management:** TanStack Query (React Query)
+- **UI:** shadcn/ui (20+ components)
+- **State:** React Query
 - **Forms:** React Hook Form + Zod
-- **API Client:** Axios
+- **API:** Axios with JWT interceptors
+- **Backend:** FastAPI + PostgreSQL
 
-## Getting Started
+---
 
-### Prerequisites
+## 🔑 Key Information
 
-- Node.js 18+
-- pnpm (or npm)
-
-### Installation
-
-```bash
-# Install dependencies
-pnpm install
-
-# Run development server
-pnpm dev
+### Test Credentials
+```
+Email:    test@example.com
+Password: password123
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the dashboard.
-
-### Environment Variables
-
-Copy `.env.example` to `.env.local` and update values:
-
-```bash
-cp .env.example .env.local
+### URLs
+```
+Frontend:  http://localhost:3000
+Backend:   http://localhost:8000
+API Docs:  http://localhost:8000/docs
 ```
 
-## Project Structure
+### Database
+```
+Database: elda_db (PostgreSQL)
+Host:     localhost:5432
+User:     gaurav
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Test authentication
+node test-frontend-auth.js
+
+# Test backend
+node test-backend-now.js
+
+# Clear browser storage if needed
+open clear-storage.html
+```
+
+---
+
+## 📁 Project Structure
 
 ```
 src/
-├── app/              # Next.js App Router
-├── components/       # React components
-├── lib/              # Utilities and API clients
-├── hooks/            # Custom React hooks
-├── types/            # TypeScript types
-└── config/           # Configuration files
+├── app/
+│   ├── (auth)/          ✅ Login, Register
+│   └── (dashboard)/     ✅ Protected routes
+│       ├── care-circle/ ✅ Patient list
+│       └── patients/    ⏳ Patient detail (next)
+├── components/
+│   ├── layout/          ✅ Sidebar, Topbar
+│   ├── patients/        ✅ Patient components
+│   └── ui/              ✅ shadcn/ui
+├── hooks/               ✅ React Query hooks
+├── lib/
+│   ├── api/             ✅ API functions
+│   └── auth/            ✅ Auth utilities
+└── types/               ✅ TypeScript types
 ```
 
-## Development
+---
 
+## 🎯 Next Steps
+
+**Phase 3: Patient Detail Page** - See [RESUME_HERE.md](RESUME_HERE.md)
+
+Starting with:
+1. Patient detail header with tabs
+2. Overview tab (KPIs + timeline)
+3. Routine tab (schedules)
+
+---
+
+## 🐛 Known Issues
+
+### "undefined is not valid JSON"
+**Solution:** Clear browser storage
+```javascript
+localStorage.clear(); location.reload();
+```
+
+### Backend registration returns 500
+**Solution:** Use test user or creation script
 ```bash
-# Start dev server
-pnpm dev
-
-# Build for production
-pnpm build
-
-# Start production server
-pnpm start
-
-# Run linting
-pnpm lint
+python /Users/gaurav/Elda/backend/create_test_user_v2.py
 ```
 
-## 📚 Documentation
+---
 
-### Frontend Status
-- **[QUICK_START.md](Documents/QUICK_START.md)** - Resume work quickly
-- **[WEB_DASHBOARD_FRONTEND_STATUS.md](Documents/WEB_DASHBOARD_FRONTEND_STATUS.md)** - Complete setup status and progress
+## 📞 Need Help?
 
-### Project Documentation (Root /Documents/)
-- **CAREGIVER_WEB_APP_SPECIFICATION.md** - Complete technical specifications
-- **CAREGIVER_WEB_APP_TASKS.md** - Phase-by-phase task breakdown
-- **CAREGIVER_WEB_APP_SETUP_GUIDE.md** - Detailed setup instructions
-- **CAREGIVER_WEB_APP_API_GUIDE.md** - Backend API reference
-
-## 🔗 Backend API
-
-**Development:** http://localhost:8000
-**API Docs:** http://localhost:8000/docs
-**Total Endpoints:** 49 (40 for caregiver dashboard)
-
-## ⚠️ Current Status
-
-**Setup:** 95% complete
-**Issue:** Missing `autoprefixer` dependency
-**Fix:** Run `npm install`
-**Next:** Install shadcn/ui components and start Phase 1 development
-
-See [QUICK_START.md](Documents/QUICK_START.md) for detailed status.
+See [RESUME_HERE.md](RESUME_HERE.md) or [SESSION_SUMMARY.md](SESSION_SUMMARY.md)

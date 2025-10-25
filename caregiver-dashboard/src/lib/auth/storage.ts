@@ -67,8 +67,12 @@ export function removeRefreshToken(): void {
  * Store user data in localStorage
  */
 export function setUser(user: any): void {
-  if (isBrowser) {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  if (isBrowser && user) {
+    try {
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } catch (error) {
+      console.error('Failed to store user data:', error);
+    }
   }
 }
 
@@ -77,8 +81,19 @@ export function setUser(user: any): void {
  */
 export function getUser(): any | null {
   if (isBrowser) {
-    const user = localStorage.getItem(USER_KEY);
-    return user ? JSON.parse(user) : null;
+    try {
+      const user = localStorage.getItem(USER_KEY);
+      // Handle edge cases: null, "undefined", "null", empty string
+      if (!user || user === 'undefined' || user === 'null' || user === '') {
+        return null;
+      }
+      return JSON.parse(user);
+    } catch (error) {
+      console.error('Failed to parse user data:', error);
+      // Clear invalid data
+      localStorage.removeItem(USER_KEY);
+      return null;
+    }
   }
   return null;
 }

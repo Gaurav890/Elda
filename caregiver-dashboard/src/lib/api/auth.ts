@@ -17,30 +17,41 @@ import { setAccessToken, setRefreshToken, setUser } from '@/lib/auth/storage';
  * Login with email and password
  */
 export async function login(credentials: LoginRequest): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse>('/api/v1/auth/login', credentials);
+  // Backend returns tokens only, not caregiver object
+  const tokenResponse = await apiClient.post('/api/v1/auth/login', credentials);
 
-  // Store tokens and user data
-  const { access_token, refresh_token, caregiver } = response.data;
+  // Store tokens
+  const { access_token, refresh_token } = tokenResponse.data;
   setAccessToken(access_token);
   setRefreshToken(refresh_token);
+
+  // Fetch caregiver data with the new token
+  const caregiverResponse = await apiClient.get<Caregiver>('/api/v1/auth/me');
+  const caregiver = caregiverResponse.data;
   setUser(caregiver);
 
-  return response.data;
+  return {
+    access_token,
+    refresh_token,
+    caregiver,
+  };
 }
 
 /**
  * Register new caregiver account
  */
 export async function register(data: RegisterRequest): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse>('/api/v1/auth/register', data);
+  // Backend returns caregiver object (not tokens) on registration
+  const caregiverResponse = await apiClient.post<Caregiver>('/api/v1/auth/register', data);
+  const caregiver = caregiverResponse.data;
 
-  // Store tokens and user data
-  const { access_token, refresh_token, caregiver } = response.data;
-  setAccessToken(access_token);
-  setRefreshToken(refresh_token);
-  setUser(caregiver);
+  // Now login to get tokens
+  const loginResponse = await login({
+    email: data.email,
+    password: data.password,
+  });
 
-  return response.data;
+  return loginResponse;
 }
 
 /**
