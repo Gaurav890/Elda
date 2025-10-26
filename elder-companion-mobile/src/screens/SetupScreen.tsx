@@ -106,8 +106,8 @@ export default function SetupScreen() {
   // Simulate QR scan for development
   const simulateQRScan = () => {
     const testQRData = {
-      patient_id: '0a25b63d-eb49-4ba5-b2fa-9f1594162a7a',
-      setup_token: 'test_token_for_development',
+      patient_id: '4c7389e0-9485-487a-9dde-59c14ab97d67',
+      setup_token: '5KGouC_kri2vFeLIQXqf3_UywvnmmunRAad1Ncn_x0I',
     };
     handleQRCodeScanned(JSON.stringify(testQRData));
   };

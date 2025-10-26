@@ -3,8 +3,32 @@
  * Backend endpoint URLs and timeouts
  */
 
+import { Platform } from 'react-native';
+
+// iOS Simulator needs local network IP, Android Emulator uses 10.0.2.2
+// For production, use environment variable
+const getBaseURL = (): string => {
+  if (process.env.API_URL) {
+    return process.env.API_URL;
+  }
+
+  if (__DEV__) {
+    // Development mode
+    if (Platform.OS === 'ios') {
+      // iOS Simulator - use local network IP
+      return 'http://10.0.18.14:8000';
+    } else {
+      // Android Emulator - use special alias
+      return 'http://10.0.2.2:8000';
+    }
+  }
+
+  // Production - should be set via environment variable
+  return 'https://api.eldercompanion.app';
+};
+
 export const API_CONFIG = {
-  BASE_URL: process.env.API_URL || 'http://localhost:8000',
+  BASE_URL: getBaseURL(),
   TIMEOUT: parseInt(process.env.API_TIMEOUT || '10000', 10),
   VERSION: 'v1',
 };
