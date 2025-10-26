@@ -46,7 +46,22 @@ export default function VoiceChatScreen() {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [transcribedText, setTranscribedText] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [elapsedTime, setElapsedTime] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+  const processingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Use refs to track current values (avoid stale closures)
+  const voiceStateRef = useRef<VoiceState>('idle');
+  const transcribedTextRef = useRef<string>('');
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    voiceStateRef.current = voiceState;
+  }, [voiceState]);
+
+  useEffect(() => {
+    transcribedTextRef.current = transcribedText;
+  }, [transcribedText]);
 
   // Waveform animation for listening state
   const waveAnim = useRef(new Animated.Value(1)).current;
@@ -63,9 +78,20 @@ export default function VoiceChatScreen() {
         setTranscribedText(transcript);
       },
       onEnd: () => {
-        console.log('Voice ended');
-        if (voiceState === 'listening' && transcribedText) {
-          handleVoiceInput(transcribedText);
+        console.log('🎤 Voice ended');
+        console.log('Current state:', voiceStateRef.current);
+        console.log('Current transcript:', transcribedTextRef.current);
+
+        // Use refs to get current values (not stale closure values)
+        // Accept both 'listening' and 'error' states (error happens on timeout)
+        const hasTranscript = transcribedTextRef.current && transcribedTextRef.current.trim().length > 0;
+        const isValidState = voiceStateRef.current === 'listening' || voiceStateRef.current === 'error';
+
+        if (isValidState && hasTranscript) {
+          console.log('✅ Auto-triggering voice input with:', transcribedTextRef.current);
+          handleVoiceInput(transcribedTextRef.current);
+        } else {
+          console.log('❌ Not auto-triggering - state:', voiceStateRef.current, 'hasTranscript:', hasTranscript);
         }
       },
       onError: (error) => {
@@ -103,6 +129,9 @@ export default function VoiceChatScreen() {
     return () => {
       voiceService.cancelListening();
       ttsService.stop();
+      if (processingTimerRef.current) {
+        clearInterval(processingTimerRef.current);
+      }
     };
   }, []);
 
@@ -163,24 +192,87 @@ export default function VoiceChatScreen() {
     // Add patient message
     addMessage(text, 'patient');
     setTranscribedText('');
+
+    // Check if message contains reminder acknowledgment phrases
+    const acknowledgmentPhrases = [
+      'i took it',
+      'took it',
+      'i did it',
+      'did it',
+      'done',
+      'completed',
+      'finished',
+      'yes i took',
+      'already took',
+      'just took',
+    ];
+    const lowerText = text.toLowerCase();
+    const isAcknowledgment = acknowledgmentPhrases.some(phrase =>
+      lowerText.includes(phrase),
+    );
+
+    // STEP 1: Show "Processing your message"
+    console.log('🔄 Setting state to PROCESSING');
     setVoiceState('processing');
+    setElapsedTime(0);
+
+    // Start elapsed time counter
+    processingTimerRef.current = setInterval(() => {
+      setElapsedTime(prev => prev + 0.1);
+    }, 100);
 
     try {
       // Send to backend
+      const startTime = Date.now();
+      console.log('📤 Sending voice message to backend:', text);
+
+      // If acknowledgment detected, include flag in context
+      const context = isAcknowledgment
+        ? { potential_reminder_acknowledgment: true, patient_message: text }
+        : undefined;
+
+      // Add timeout indicator for long requests
+      const timeoutId = setTimeout(() => {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`⏱️ API call taking ${elapsed}s...`);
+        // State will still show "Processing..." which is fine
+      }, 5000);
+
       const response = await apiService.sendVoiceMessage(
         patientId,
         text,
         'spontaneous',
+        context,
       );
+
+      clearTimeout(timeoutId);
+
+      // Stop timer
+      if (processingTimerRef.current) {
+        clearInterval(processingTimerRef.current);
+        processingTimerRef.current = null;
+      }
+
+      const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`✅ Received response from backend in ${totalTime}s`);
 
       // Add AI response
       addMessage(response.ai_response, 'ai');
 
+      // STEP 2: Show "Preparing response" before TTS
+      console.log('🔊 Setting state to SPEAKING');
+      setVoiceState('speaking');
+
+      // Small delay to show the speaking state
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       // Play TTS
+      console.log('Playing TTS response:', response.ai_response);
       await ttsService.speak(response.ai_response);
 
-      // Continue conversation if needed
-      if (response.continue_conversation) {
+      // Continue conversation if needed (default to false if not provided)
+      const shouldContinue = response.continue_conversation || false;
+      if (shouldContinue) {
         // Wait for TTS to finish, then restart listening
         // The TTS onFinish callback will set state to idle, then we can restart
         setTimeout(() => {
@@ -190,9 +282,17 @@ export default function VoiceChatScreen() {
         }, 500);
       }
     } catch (error) {
-      console.error('Voice interaction error:', error);
+      // Stop timer
+      if (processingTimerRef.current) {
+        clearInterval(processingTimerRef.current);
+        processingTimerRef.current = null;
+      }
+
+      console.error('❌ Voice interaction error:', error);
+      console.error('Error details:', JSON.stringify(error));
       const errorMsg = "I'm having trouble hearing you right now. Let's try again.";
       addMessage(errorMsg, 'ai');
+      setVoiceState('speaking');
       await ttsService.speak(errorMsg);
     }
   };
@@ -248,18 +348,29 @@ export default function VoiceChatScreen() {
               ]}>
               <Text style={styles.listeningIcon}>🎤</Text>
             </Animated.View>
-            <Text style={styles.listeningText}>Listening...</Text>
+            <Text style={styles.listeningText}>👂 LISTENING NOW - Say something!</Text>
             {transcribedText && (
               <Text style={styles.transcribedText}>{transcribedText}</Text>
             )}
+            <TouchableOpacity
+              style={styles.doneButton}
+              onPress={stopListening}>
+              <Text style={styles.doneButtonText}>✓ Done Speaking</Text>
+            </TouchableOpacity>
           </View>
         );
 
       case 'processing':
         return (
-          <View style={styles.listeningContainer}>
+          <View style={styles.processingContainer}>
             <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.processingText}>Processing...</Text>
+            <Text style={styles.processingText}>🤖 AI is thinking...</Text>
+            <Text style={styles.processingTimeText}>
+              {elapsedTime.toFixed(1)}s elapsed
+            </Text>
+            <Text style={styles.processingSubtext}>
+              {elapsedTime < 5 ? 'Please wait...' : 'Taking a bit longer than usual...'}
+            </Text>
           </View>
         );
 
@@ -292,7 +403,7 @@ export default function VoiceChatScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>💬 Conversation</Text>
+        <Text style={styles.headerTitle}>🔥 UPDATED VERSION - Conversation</Text>
       </View>
 
       {/* Voice State Indicator */}
@@ -402,6 +513,15 @@ const styles = StyleSheet.create({
     minHeight: 120,
     justifyContent: 'center',
   },
+  processingContainer: {
+    padding: Spacing.xl,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    minHeight: 160,
+    justifyContent: 'center',
+    borderBottomWidth: 3,
+    borderBottomColor: Colors.primary,
+  },
   waveform: {
     padding: Spacing.md,
     alignItems: 'center',
@@ -423,9 +543,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   processingText: {
-    ...Typography.bodyLarge,
+    ...Typography.h2,
+    color: Colors.primary,
+    marginTop: Spacing.md,
+    fontWeight: '700',
+  },
+  processingTimeText: {
+    fontSize: 32,
+    color: Colors.primary,
+    marginTop: Spacing.sm,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
+  processingSubtext: {
+    ...Typography.body,
     color: Colors.textSecondary,
     marginTop: Spacing.sm,
+    fontWeight: '500',
   },
   speakingIcon: {
     fontSize: 48,
@@ -448,6 +582,20 @@ const styles = StyleSheet.create({
   idleText: {
     ...Typography.bodyLarge,
     color: Colors.textTertiary,
+  },
+  doneButton: {
+    marginTop: Spacing.lg,
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    ...Elevation.medium,
+  },
+  doneButtonText: {
+    ...Typography.bodyLarge,
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 18,
   },
   messagesContainer: {
     flex: 1,

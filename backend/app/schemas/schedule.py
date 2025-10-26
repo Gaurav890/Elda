@@ -111,3 +111,10 @@ class ReminderListResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ReminderAcknowledge(BaseModel):
+    """Schema for acknowledging a reminder from mobile app"""
+    status: str = Field(..., pattern="^(completed|missed|snoozed)$")
+    notes: Optional[str] = Field(None, max_length=500)
+    patient_response: Optional[str] = Field(None, max_length=1000)

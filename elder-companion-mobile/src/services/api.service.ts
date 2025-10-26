@@ -115,19 +115,30 @@ class ApiService {
    */
   async sendHeartbeat(
     patientId: string,
-    activityType: string,
-    batteryLevel?: number,
-    location?: { latitude: number; longitude: number },
-    details?: Record<string, any>,
+    payload: {
+      battery_level: number;
+      app_state: string;
+      activity_type: string;
+      network_type: string;
+      last_interaction?: string;
+      is_charging?: boolean;
+      device_info?: any;
+    },
   ): Promise<HeartbeatResponse> {
     const request: HeartbeatRequest = {
-      activity_type: activityType,
+      activity_type: payload.activity_type,
       device_type: Platform.OS,
       app_version: APP_CONFIG.APP_VERSION,
-      battery_level: batteryLevel,
-      latitude: location?.latitude,
-      longitude: location?.longitude,
-      details,
+      battery_level: payload.battery_level,
+      latitude: undefined,
+      longitude: undefined,
+      details: {
+        app_state: payload.app_state,
+        network_type: payload.network_type,
+        last_interaction: payload.last_interaction,
+        is_charging: payload.is_charging,
+        device_info: payload.device_info,
+      },
     };
 
     const response = await this.api.post<HeartbeatResponse>(
@@ -149,11 +160,41 @@ class ApiService {
   }
 
   /**
+   * Get patient schedules (medications and meals)
+   */
+  async getPatientSchedules(patientId: string): Promise<any[]> {
+    const response = await this.api.get(
+      API_ENDPOINTS.PATIENT_SCHEDULES(patientId),
+    );
+    return response.data;
+  }
+
+  /**
    * Get upcoming reminders (optional - for next reminder display)
    */
   async getUpcomingReminders(patientId: string): Promise<any> {
     const response = await this.api.get(
       API_ENDPOINTS.PATIENT_REMINDERS(patientId),
+    );
+    return response.data;
+  }
+
+  /**
+   * Acknowledge a reminder (mark as completed, missed, or snoozed)
+   */
+  async acknowledgeReminder(
+    reminderId: string,
+    status: 'completed' | 'missed' | 'snoozed',
+    patientResponse?: string,
+    notes?: string,
+  ): Promise<any> {
+    const response = await this.api.put(
+      API_ENDPOINTS.ACKNOWLEDGE_REMINDER(reminderId),
+      {
+        status,
+        patient_response: patientResponse,
+        notes,
+      },
     );
     return response.data;
   }

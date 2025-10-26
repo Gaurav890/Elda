@@ -19,13 +19,20 @@ import { ttsService } from './tts.service';
 const STORAGE_KEY_FCM_TOKEN = 'fcm_token';
 
 export interface NotificationPayload {
+  // Reminder fields (from backend)
+  type?: 'reminder' | 'alert' | 'check_in';
   reminder_id?: string;
+  reminder_type?: string; // medication, meal, exercise, etc.
+  speak_text?: string; // TTS message from backend
+  requires_response?: boolean;
+
+  // Legacy/general fields
   patient_id?: string;
   message: string;
   title: string;
-  notification_type: 'medication_reminder' | 'check_in' | 'emergency' | 'general';
-  priority: 'high' | 'medium' | 'low';
-  tts_message?: string; // Optional TTS message (may differ from visible message)
+  notification_type?: 'medication_reminder' | 'check_in' | 'emergency' | 'general';
+  priority?: 'high' | 'medium' | 'low';
+  tts_message?: string;
 }
 
 class NotificationService {
@@ -200,9 +207,14 @@ class NotificationService {
 
       console.log('[NotificationService] Foreground payload:', payload);
 
-      // Play TTS for medication reminders
-      if (payload.notification_type === 'medication_reminder') {
-        const ttsMessage = payload.tts_message || payload.message;
+      // Play TTS for reminders (backend sends speak_text)
+      const shouldPlayTTS =
+        payload.type === 'reminder' ||
+        payload.notification_type === 'medication_reminder';
+
+      if (shouldPlayTTS) {
+        const ttsMessage = payload.speak_text || payload.tts_message || payload.message;
+        console.log('[NotificationService] Playing TTS:', ttsMessage);
         await ttsService.speak(ttsMessage);
       }
 
@@ -219,7 +231,8 @@ class NotificationService {
             text: 'View',
             onPress: () => {
               // Navigate to appropriate screen
-              console.log('[NotificationService] Navigate to:', payload.notification_type);
+              const navType = payload.type || payload.notification_type;
+              console.log('[NotificationService] Navigate to:', navType);
             },
           },
         ]
@@ -297,7 +310,14 @@ class NotificationService {
       const notification = remoteMessage.notification;
 
       return {
+        // Backend reminder fields
+        type: data.type as any,
         reminder_id: data.reminder_id as string,
+        reminder_type: data.reminder_type as string,
+        speak_text: data.speak_text as string,
+        requires_response: data.requires_response === 'true' || data.requires_response === true,
+
+        // Legacy/general fields
         patient_id: data.patient_id as string,
         message: (notification?.body || data.message || 'New notification') as string,
         title: (notification?.title || data.title || 'Elder Companion') as string,

@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Bot } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, formatToPST } from '@/lib/utils';
 import { Conversation, SENTIMENT_EMOJI, URGENCY_COLORS } from '@/types/conversation';
 
 interface ConversationMessageProps {
@@ -115,9 +115,14 @@ export function ConversationMessage({
 
         {/* Timestamp and sentiment */}
         <div className="flex items-center gap-2 mt-1 px-1">
-          <span className="text-xs text-gray-500">
-            {formatDistanceToNow(new Date(conversation.timestamp), { addSuffix: true })}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-500">
+              {formatDistanceToNow(new Date(conversation.timestamp), { addSuffix: true })}
+            </span>
+            <span className="text-xs text-gray-400">
+              {formatToPST(conversation.timestamp, "MMM dd, h:mm a")} PST
+            </span>
+          </div>
           {isPatient && conversation.sentiment && (
             <span className="text-sm" title={conversation.sentiment}>
               {SENTIMENT_EMOJI[conversation.sentiment]}

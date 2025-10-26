@@ -13,10 +13,14 @@ import {
  */
 export async function getPatientSchedules(patientId: string): Promise<ScheduleListResponse> {
   try {
-    const response = await apiClient.get<ScheduleListResponse>(
-      `/schedules/patients/${patientId}/schedules`
+    const response = await apiClient.get<Schedule[]>(
+      `/api/v1/schedules/patients/${patientId}/schedules`
     );
-    return response.data;
+    // Backend returns array, wrap in expected format
+    return {
+      schedules: response.data,
+      total: response.data.length
+    };
   } catch (error) {
     console.error('Error fetching patient schedules:', error);
     // Return empty data if API fails
@@ -29,7 +33,7 @@ export async function getPatientSchedules(patientId: string): Promise<ScheduleLi
  */
 export async function getSchedule(scheduleId: string): Promise<Schedule | null> {
   try {
-    const response = await apiClient.get<Schedule>(`/schedules/schedules/${scheduleId}`);
+    const response = await apiClient.get<Schedule>(`/api/v1/schedules/schedules/${scheduleId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching schedule:', error);
@@ -46,7 +50,7 @@ export async function createSchedule(
 ): Promise<Schedule> {
   try {
     const response = await apiClient.post<Schedule>(
-      `/schedules/patients/${patientId}/schedules`,
+      `/api/v1/schedules/patients/${patientId}/schedules`,
       data
     );
     return response.data;
@@ -72,7 +76,7 @@ export async function updateSchedule(
   data: ScheduleUpdate
 ): Promise<Schedule> {
   try {
-    const response = await apiClient.patch<Schedule>(`/schedules/schedules/${scheduleId}`, data);
+    const response = await apiClient.patch<Schedule>(`/api/v1/schedules/schedules/${scheduleId}`, data);
     return response.data;
   } catch (error) {
     console.error('Error updating schedule:', error);
@@ -99,7 +103,7 @@ export async function updateSchedule(
  */
 export async function deleteSchedule(scheduleId: string): Promise<void> {
   try {
-    await apiClient.delete(`/schedules/schedules/${scheduleId}`);
+    await apiClient.delete(`/api/v1/schedules/schedules/${scheduleId}`);
   } catch (error) {
     console.error('Error deleting schedule:', error);
     // Silently succeed for mock data

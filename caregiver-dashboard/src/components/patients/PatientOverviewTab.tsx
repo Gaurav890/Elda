@@ -61,18 +61,18 @@ export function PatientOverviewTab({ patient }: PatientOverviewTabProps) {
     }
   }, [patient.last_active_at]);
 
-  // Calculate KPI values
-  const todayRemindersValue = reminderData
+  // Calculate KPI values - with safe fallbacks for missing data
+  const todayRemindersValue = reminderData?.summary
     ? `${reminderData.summary.completed}/${reminderData.summary.total}`
     : '0/0';
-  const todayRemindersRate = reminderData?.summary.completion_rate || 0;
+  const todayRemindersRate = reminderData?.summary?.completion_rate || 0;
   const todayRemindersVariant =
     todayRemindersRate >= 80 ? 'success' : todayRemindersRate >= 60 ? 'warning' : 'danger';
 
-  const moodValue = moodData ? moodEmojis[moodData.sentiment] : '😐';
-  const moodLabel = moodData ? moodLabels[moodData.sentiment] : 'Unknown';
+  const moodValue = moodData?.sentiment ? moodEmojis[moodData.sentiment] : '😐';
+  const moodLabel = moodData?.sentiment ? moodLabels[moodData.sentiment] : 'Unknown';
 
-  const weeklyAdherenceValue = adherenceData ? `${Math.round(adherenceData.rate)}%` : '0%';
+  const weeklyAdherenceValue = adherenceData?.rate ? `${Math.round(adherenceData.rate)}%` : '0%';
   const weeklyAdherenceLabel = adherenceData
     ? `${adherenceData.completed}/${adherenceData.total} reminders`
     : '0/0 reminders';

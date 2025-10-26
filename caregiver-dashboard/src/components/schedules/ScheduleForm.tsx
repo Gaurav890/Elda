@@ -52,7 +52,7 @@ export function ScheduleForm({
   const [formData, setFormData] = useState<ScheduleCreate>({
     title: '',
     description: '',
-    schedule_type: 'medication',
+    type: 'medication',
     time: '09:00',
     recurrence_type: 'daily',
     days_of_week: [],
@@ -66,7 +66,7 @@ export function ScheduleForm({
       setFormData({
         title: schedule.title,
         description: schedule.description || '',
-        schedule_type: schedule.schedule_type,
+        type: schedule.type,
         time: schedule.time,
         recurrence_type: schedule.recurrence_type,
         days_of_week: schedule.days_of_week || [],
@@ -78,7 +78,7 @@ export function ScheduleForm({
       setFormData({
         title: '',
         description: '',
-        schedule_type: 'medication',
+        type: 'medication',
         time: '09:00',
         recurrence_type: 'daily',
         days_of_week: [],
@@ -144,16 +144,16 @@ export function ScheduleForm({
 
             {/* Schedule Type */}
             <div className="space-y-2">
-              <Label htmlFor="schedule_type">
+              <Label htmlFor="type">
                 Type <span className="text-destructive">*</span>
               </Label>
               <Select
-                value={formData.schedule_type}
+                value={formData.type}
                 onValueChange={(value: ScheduleType) =>
-                  setFormData({ ...formData, schedule_type: value })
+                  setFormData({ ...formData, type: value })
                 }
               >
-                <SelectTrigger id="schedule_type">
+                <SelectTrigger id="type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

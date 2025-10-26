@@ -114,7 +114,7 @@ export function ScheduleList({ schedules, onEdit, onDelete, onToggleActive }: Sc
             </TableHeader>
             <TableBody>
               {schedules.map((schedule) => {
-                const typeConfig = scheduleTypeConfig[schedule.schedule_type];
+                const typeConfig = scheduleTypeConfig[schedule.type];
                 const Icon = typeConfig.icon;
 
                 return (
@@ -177,7 +177,7 @@ export function ScheduleList({ schedules, onEdit, onDelete, onToggleActive }: Sc
       {/* Mobile: Card view */}
       <div className="md:hidden space-y-4">
         {schedules.map((schedule) => {
-          const typeConfig = scheduleTypeConfig[schedule.schedule_type];
+          const typeConfig = scheduleTypeConfig[schedule.type];
           const Icon = typeConfig.icon;
 
           return (

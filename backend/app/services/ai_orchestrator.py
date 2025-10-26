@@ -6,7 +6,8 @@ Coordinates Claude, Letta, and Chroma services for complete AI-powered conversat
 from typing import Dict, Any, List, Optional
 import logging
 import time
-from datetime import datetime
+import asyncio
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from app.services.claude_service import claude_service
@@ -17,6 +18,9 @@ from app.models.patient import Patient
 from app.models.alert import Alert
 
 logger = logging.getLogger(__name__)
+
+# Simple in-memory cache for Letta context (5 minute TTL)
+_letta_context_cache: Dict[str, tuple[Dict, float]] = {}
 
 
 class AIOrchestrator:
@@ -67,9 +71,11 @@ class AIOrchestrator:
             - response_time: Processing time in seconds
         """
         start_time = time.time()
+        timing_log = {}
 
         try:
             # 1. Get patient context
+            step_start = time.time()
             patient = db.query(Patient).filter(Patient.id == patient_id).first()
             if not patient:
                 logger.error(f"Patient {patient_id} not found")
@@ -80,25 +86,67 @@ class AIOrchestrator:
                 }
 
             patient_context = self._build_patient_context(patient)
+            timing_log["patient_context"] = round(time.time() - step_start, 3)
+            logger.info(f"[Timing] Patient context: {timing_log['patient_context']}s")
 
-            # 2. Search Chroma for similar conversations (parallel with Letta)
-            similar_conversations = await self.chroma.search_similar_conversations(
-                patient_id=str(patient_id),
-                query_message=patient_message,
-                n_results=3
-            )
+            # 2 & 3. PARALLEL: Search Chroma + Get Letta context
+            step_start = time.time()
 
-            # 3. Get Letta memory context (if agent exists)
+            # Check Letta cache first (5 min TTL)
+            cache_key = f"{patient_id}_{patient.letta_agent_id}"
             letta_context = {}
-            if patient.letta_agent_id:
-                letta_result = await self.letta.send_message_to_agent(
+            use_cache = False
+
+            if cache_key in _letta_context_cache:
+                cached_data, cache_time = _letta_context_cache[cache_key]
+                if time.time() - cache_time < 300:  # 5 minutes
+                    letta_context = cached_data
+                    use_cache = True
+                    logger.info(f"[Cache HIT] Using cached Letta context for {patient_id}")
+                else:
+                    # Cache expired, remove it
+                    del _letta_context_cache[cache_key]
+                    logger.info(f"[Cache EXPIRED] Refreshing Letta context for {patient_id}")
+
+            # Run Chroma and Letta in parallel (if not cached)
+            if patient.letta_agent_id and not use_cache:
+                chroma_task = self.chroma.search_similar_conversations(
+                    patient_id=str(patient_id),
+                    query_message=patient_message,
+                    n_results=2  # Reduced from 3 to 2 for performance
+                )
+                letta_task = self.letta.send_message_to_agent(
                     agent_id=patient.letta_agent_id,
                     message=f"Patient said: {patient_message}",
                     conversation_context={"type": conversation_type}
                 )
+
+                # Execute in parallel
+                similar_conversations, letta_result = await asyncio.gather(chroma_task, letta_task)
                 letta_context = letta_result.get("memory_context", {})
 
+                # Cache the Letta context
+                _letta_context_cache[cache_key] = (letta_context, time.time())
+            elif not patient.letta_agent_id:
+                # No Letta agent, only run Chroma
+                similar_conversations = await self.chroma.search_similar_conversations(
+                    patient_id=str(patient_id),
+                    query_message=patient_message,
+                    n_results=2
+                )
+            else:
+                # Using cached Letta, only run Chroma
+                similar_conversations = await self.chroma.search_similar_conversations(
+                    patient_id=str(patient_id),
+                    query_message=patient_message,
+                    n_results=2
+                )
+
+            timing_log["parallel_fetch"] = round(time.time() - step_start, 3)
+            logger.info(f"[Timing] Parallel fetch (Chroma + Letta): {timing_log['parallel_fetch']}s (cached: {use_cache})")
+
             # 4. Get recent conversation history for Claude
+            step_start = time.time()
             recent_conversations = db.query(Conversation).filter(
                 Conversation.patient_id == patient_id
             ).order_by(Conversation.created_at.desc()).limit(5).all()
@@ -110,8 +158,11 @@ class AIOrchestrator:
                 }
                 for conv in reversed(recent_conversations)  # Oldest to newest
             ]
+            timing_log["conversation_history"] = round(time.time() - step_start, 3)
+            logger.info(f"[Timing] Conversation history fetch: {timing_log['conversation_history']}s")
 
             # 5. Generate AI response with Claude
+            step_start = time.time()
             claude_result = await self.claude.analyze_conversation(
                 patient_message=patient_message,
                 patient_context=patient_context,
@@ -124,7 +175,11 @@ class AIOrchestrator:
             urgency_level = claude_result.get("urgency_level", "none")
             analysis = claude_result.get("analysis", "")
 
+            timing_log["claude_analysis"] = round(time.time() - step_start, 3)
+            logger.info(f"[Timing] Claude analysis: {timing_log['claude_analysis']}s")
+
             # 6. Create conversation record
+            step_start = time.time()
             new_conversation = Conversation(
                 patient_id=patient_id,
                 patient_message=patient_message,
@@ -141,8 +196,11 @@ class AIOrchestrator:
 
             db.add(new_conversation)
             db.flush()  # Get conversation ID
+            timing_log["db_save"] = round(time.time() - step_start, 3)
+            logger.info(f"[Timing] Database save: {timing_log['db_save']}s")
 
             # 7. Add to Chroma for future semantic search
+            step_start = time.time()
             await self.chroma.add_conversation(
                 conversation_id=str(new_conversation.id),
                 patient_id=str(patient_id),
@@ -154,6 +212,8 @@ class AIOrchestrator:
                     "urgency_level": urgency_level
                 }
             )
+            timing_log["chroma_store"] = round(time.time() - step_start, 3)
+            logger.info(f"[Timing] Chroma storage: {timing_log['chroma_store']}s")
 
             # 8. Check if alert should be created
             alert_created = False
@@ -175,6 +235,14 @@ class AIOrchestrator:
 
             response_time = time.time() - start_time
 
+            # Log complete timing breakdown
+            logger.info(f"[Timing SUMMARY] Total: {response_time:.3f}s | Breakdown: " +
+                       f"Context: {timing_log.get('patient_context', 0)}s, " +
+                       f"Parallel(Letta+Chroma): {timing_log.get('parallel_fetch', 0)}s, " +
+                       f"History: {timing_log.get('conversation_history', 0)}s, " +
+                       f"Claude: {timing_log.get('claude_analysis', 0)}s, " +
+                       f"DB: {timing_log.get('db_save', 0)}s, " +
+                       f"Chroma: {timing_log.get('chroma_store', 0)}s")
             logger.info(f"Voice interaction processed for patient {patient_id} in {response_time:.2f}s")
 
             return {

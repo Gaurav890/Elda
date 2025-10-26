@@ -3,7 +3,7 @@
  * QR code scanner for initial device setup
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { RNCamera } from 'react-native-camera';
 import { RootStackParamList } from '../types';
 import { apiService } from '../services/api.service';
 import { storageService } from '../services/storage.service';
@@ -29,6 +31,8 @@ export default function SetupScreen() {
   const { setPatientData } = usePatientStore();
   const [loading, setLoading] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
+  const [scanned, setScanned] = useState(false);
+  const cameraRef = useRef<RNCamera>(null);
 
   const handleQRCodeScanned = async (data: string) => {
     if (loading) return;
@@ -99,17 +103,41 @@ export default function SetupScreen() {
 
   const handleStartScan = () => {
     setScannerActive(true);
-    // In a real implementation, this would open the camera
-    // For now, we'll simulate it with a test button
   };
 
-  // Simulate QR scan for development
-  const simulateQRScan = () => {
-    const testQRData = {
-      patient_id: '4c7389e0-9485-487a-9dde-59c14ab97d67',
-      setup_token: '5KGouC_kri2vFeLIQXqf3_UywvnmmunRAad1Ncn_x0I',
-    };
-    handleQRCodeScanned(JSON.stringify(testQRData));
+  const handleBarCodeScanned = ({ data, type }: any) => {
+    if (loading || scanned) return;
+
+    console.log('QR Code scanned:', data, 'Type:', type);
+    setScanned(true);
+    handleQRCodeScanned(data);
+  };
+
+  const handleCameraError = (error: any) => {
+    console.error('Camera error:', error);
+    Alert.alert(
+      'Camera Error',
+      'Unable to access camera. Please check permissions in Settings.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open Settings', onPress: () => Linking.openSettings() },
+      ]
+    );
+    setScannerActive(false);
+  };
+
+  const handleCameraStatusChange = (status: any) => {
+    console.log('Camera status:', status);
+    if (status.cameraStatus === 'NOT_AUTHORIZED') {
+      Alert.alert(
+        'Camera Permission Required',
+        'Please enable camera access in Settings to scan QR codes.',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => setScannerActive(false) },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+        ]
+      );
+    }
   };
 
   return (
@@ -133,35 +161,43 @@ export default function SetupScreen() {
         )}
 
         {!loading && !scannerActive && (
-          <>
-            <TouchableOpacity
-              style={styles.scanButton}
-              onPress={handleStartScan}>
-              <Text style={styles.scanButtonText}>📷 Scan QR Code</Text>
-            </TouchableOpacity>
-
-            {/* Development-only button */}
-            {__DEV__ && (
-              <TouchableOpacity
-                style={[styles.scanButton, styles.devButton]}
-                onPress={simulateQRScan}>
-                <Text style={styles.scanButtonText}>🧪 Simulate QR Scan (Dev)</Text>
-              </TouchableOpacity>
-            )}
-          </>
+          <TouchableOpacity
+            style={styles.scanButton}
+            onPress={handleStartScan}>
+            <Text style={styles.scanButtonText}>📷 Scan QR Code</Text>
+          </TouchableOpacity>
         )}
 
         {scannerActive && !loading && (
           <View style={styles.scannerContainer}>
-            <Text style={styles.scannerText}>
-              📸 Camera scanner would open here
+            <Text style={styles.scannerInstructionText}>
+              Point your camera at the QR code
             </Text>
-            <Text style={styles.scannerSubtext}>
-              Point camera at QR code to scan
-            </Text>
+            <RNCamera
+              ref={cameraRef}
+              style={styles.camera}
+              type={RNCamera.Constants.Type.back}
+              flashMode={RNCamera.Constants.FlashMode.auto}
+              onBarCodeRead={handleBarCodeScanned}
+              barCodeTypes={[RNCamera.Constants.BarCodeType.qr]}
+              captureAudio={false}
+              onStatusChange={handleCameraStatusChange}
+              onMountError={handleCameraError}
+              androidCameraPermissionOptions={{
+                title: 'Camera Permission',
+                message: 'Elder Companion needs camera access to scan QR codes',
+                buttonPositive: 'OK',
+                buttonNegative: 'Cancel',
+              }}
+            >
+              <View style={styles.qrMarker} />
+            </RNCamera>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={() => setScannerActive(false)}>
+              onPress={() => {
+                setScannerActive(false);
+                setScanned(false);
+              }}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -241,12 +277,12 @@ const styles = StyleSheet.create({
   },
   scannerContainer: {
     width: '100%',
-    height: 400,
-    backgroundColor: '#f3f4f6',
+    height: 500,
+    backgroundColor: '#000000',
     borderRadius: 16,
+    overflow: 'hidden',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
+    justifyContent: 'flex-start',
   },
   scannerText: {
     fontSize: 24,
@@ -264,12 +300,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 16,
+    marginBottom: 16,
   },
   cancelButtonText: {
     fontSize: 18,
-    color: '#4b5563',
+    color: '#1f2937',
+    fontWeight: '600',
   },
   footer: {
     padding: 24,
@@ -278,5 +316,44 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 16,
     color: '#9ca3af',
+  },
+  qrMarker: {
+    width: 250,
+    height: 250,
+    borderWidth: 3,
+    borderColor: '#2563eb',
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginLeft: -125,
+    marginTop: -125,
+  },
+  camera: {
+    height: 400,
+    width: '100%',
+  },
+  scannerInstructionText: {
+    fontSize: 18,
+    color: '#ffffff',
+    textAlign: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    width: '100%',
+  },
+  permissionDeniedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+    backgroundColor: '#ffffff',
+  },
+  permissionDeniedText: {
+    fontSize: 18,
+    color: '#4b5563',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 26,
   },
 });

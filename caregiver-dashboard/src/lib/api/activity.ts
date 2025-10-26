@@ -17,7 +17,7 @@ export async function getPatientActivity(
 ): Promise<ActivityLogListResponse> {
   try {
     const response = await apiClient.get<ActivityLogListResponse>(
-      `/patients/${patientId}/activity`,
+      `/api/v1/patients/${patientId}/activity`,
       { params: { limit } }
     );
     return response.data;
@@ -37,23 +37,26 @@ export async function getTodayReminderSummary(
   try {
     const today = new Date().toISOString().split('T')[0];
     const response = await apiClient.get<DailyReminderSummary>(
-      `/schedules/patients/${patientId}/reminders`,
+      `/api/v1/schedules/patients/${patientId}/reminders`,
       { params: { date: today } }
     );
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
+    // Endpoint not implemented yet - return default data silently
+    if (error.response?.status === 404) {
+      return {
+        date: new Date().toISOString(),
+        summary: {
+          total: 0,
+          completed: 0,
+          missed: 0,
+          pending: 0,
+          completion_rate: 0,
+        },
+      };
+    }
     console.error('Error fetching reminder summary:', error);
-    // Return mock data if API fails
-    return {
-      date: new Date().toISOString(),
-      summary: {
-        total: 0,
-        completed: 0,
-        missed: 0,
-        pending: 0,
-        completion_rate: 0,
-      },
-    };
+    return null;
   }
 }
 
@@ -66,7 +69,7 @@ export async function getPatientInsights(
 ): Promise<AIInsightsListResponse> {
   try {
     const response = await apiClient.get<AIInsightsListResponse>(
-      `/conversations/patients/${patientId}/insights`,
+      `/api/v1/conversations/patients/${patientId}/insights`,
       { params: { limit } }
     );
     return response.data;
@@ -82,9 +85,13 @@ export async function getPatientInsights(
  */
 export async function getPatientMood(patientId: string): Promise<MoodData | null> {
   try {
-    const response = await apiClient.get<MoodData>(`/patients/${patientId}/mood`);
+    const response = await apiClient.get<MoodData>(`/api/v1/patients/${patientId}/mood`);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
+    // Endpoint not implemented yet - return null silently for 404
+    if (error.response?.status === 404) {
+      return null;
+    }
     console.error('Error fetching patient mood:', error);
     return null;
   }
@@ -99,9 +106,13 @@ export async function getWeeklyAdherence(patientId: string): Promise<{
   total: number;
 } | null> {
   try {
-    const response = await apiClient.get(`/schedules/patients/${patientId}/adherence/weekly`);
+    const response = await apiClient.get(`/api/v1/schedules/patients/${patientId}/adherence/weekly`);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
+    // Endpoint not implemented yet - return null silently for 404
+    if (error.response?.status === 404) {
+      return null;
+    }
     console.error('Error fetching weekly adherence:', error);
     return null;
   }

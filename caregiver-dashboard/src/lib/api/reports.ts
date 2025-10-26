@@ -18,13 +18,17 @@ export async function getPatientReports(
 ): Promise<PatientReports> {
   try {
     const response = await apiClient.get<PatientReports>(
-      `/patients/${patientId}/reports`,
+      `/api/v1/patients/${patientId}/reports`,
       { params: { range: timeRange } }
     );
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
+    // Endpoint not implemented yet - return mock data silently for 404
+    if (error.response?.status === 404) {
+      return getMockReports(patientId, timeRange);
+    }
     console.error('Error fetching patient reports:', error);
-    // Return mock data until backend is ready
+    // Return mock data for other errors too
     return getMockReports(patientId, timeRange);
   }
 }

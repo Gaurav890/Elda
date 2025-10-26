@@ -11,7 +11,8 @@ from apscheduler.triggers.interval import IntervalTrigger
 from app.core.config import settings
 from app.jobs.reminder_generator import (
     generate_reminders_from_schedules,
-    check_and_mark_missed_reminders
+    check_and_mark_missed_reminders,
+    retry_unacknowledged_reminders
 )
 from app.jobs.summary_generator import (
     generate_daily_summaries,
@@ -60,6 +61,16 @@ def init_scheduler():
         trigger=IntervalTrigger(minutes=5),
         id="missed_reminder_check",
         name="Check and mark missed reminders",
+        replace_existing=True,
+        max_instances=1
+    )
+
+    # Run every 10 minutes to retry unacknowledged reminders
+    scheduler.add_job(
+        func=retry_unacknowledged_reminders,
+        trigger=IntervalTrigger(minutes=10),
+        id="retry_reminders",
+        name="Retry unacknowledged reminders",
         replace_existing=True,
         max_instances=1
     )

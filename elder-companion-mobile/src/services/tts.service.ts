@@ -25,7 +25,7 @@ class TTSService {
   private currentMessageId?: string;
   private callbacks: TTSCallbacks = {};
   private defaultOptions: TTSOptions = {
-    speed: 0.4, // Much slower speed for elderly users (0.4 = 40% of normal speed)
+    speed: 0.75, // Optimized speed for elderly users (0.75 = 75% of normal speed - slower and clearer)
     pitch: 1.0,
     language: 'en-US',
   };
@@ -39,8 +39,8 @@ class TTSService {
    */
   private async initializeTTS(): Promise<void> {
     try {
-      // Set default speech rate (0.4 = 40% speed for elderly users)
-      await Tts.setDefaultRate(this.defaultOptions.speed || 0.4);
+      // Set default speech rate (0.75 = 75% speed for elderly users - slower and clearer)
+      await Tts.setDefaultRate(this.defaultOptions.speed || 0.75);
 
       // Set default pitch
       await Tts.setDefaultPitch(this.defaultOptions.pitch || 1.0);

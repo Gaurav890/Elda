@@ -15,8 +15,8 @@ const getBaseURL = (): string => {
   if (__DEV__) {
     // Development mode
     if (Platform.OS === 'ios') {
-      // iOS Simulator - use local network IP
-      return 'http://10.0.18.14:8000';
+      // iOS Simulator & Real Device - use local network IP
+      return 'http://192.168.4.36:8000';
     } else {
       // Android Emulator - use special alias
       return 'http://10.0.2.2:8000';
@@ -46,8 +46,14 @@ export const API_ENDPOINTS = {
   PATIENT_HEARTBEAT: (patientId: string) =>
     `/api/v1/patients/${patientId}/heartbeat`,
 
-  // Patient data (optional)
+  // Patient data
   PATIENT_DETAIL: (patientId: string) => `/api/v1/patients/${patientId}`,
+  PATIENT_SCHEDULES: (patientId: string) =>
+    `/api/v1/mobile/patients/${patientId}/schedules`,
   PATIENT_REMINDERS: (patientId: string) =>
     `/api/v1/schedules/patients/${patientId}/reminders`,
+
+  // Reminder acknowledgment
+  ACKNOWLEDGE_REMINDER: (reminderId: string) =>
+    `/api/v1/mobile/reminders/${reminderId}/acknowledge`,
 };

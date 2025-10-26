@@ -11,7 +11,7 @@ export interface Schedule {
   patient_id: string;
   title: string;
   description?: string;
-  schedule_type: ScheduleType;
+  type: ScheduleType; // Backend uses 'type' not 'schedule_type'
   time: string; // HH:MM format (24-hour)
   recurrence_type: RecurrenceType;
   days_of_week?: DayOfWeek[]; // For weekly recurrence
@@ -24,7 +24,7 @@ export interface Schedule {
 export interface ScheduleCreate {
   title: string;
   description?: string;
-  schedule_type: ScheduleType;
+  type: ScheduleType; // Backend uses 'type' not 'schedule_type'
   time: string;
   recurrence_type: RecurrenceType;
   days_of_week?: DayOfWeek[];
@@ -35,7 +35,7 @@ export interface ScheduleCreate {
 export interface ScheduleUpdate {
   title?: string;
   description?: string;
-  schedule_type?: ScheduleType;
+  type?: ScheduleType; // Backend uses 'type' not 'schedule_type'
   time?: string;
   recurrence_type?: RecurrenceType;
   days_of_week?: DayOfWeek[];

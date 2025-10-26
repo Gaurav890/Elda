@@ -12,12 +12,15 @@ import {
   ScrollView,
   Alert,
   Animated,
+  Vibration,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import { usePatientStore } from '../stores/patient.store';
 import { apiService } from '../services/api.service';
+import { heartbeatService } from '../services/heartbeat.service';
 import { ACTIVITY_TYPES } from '../config/constants';
 import { Colors } from '../styles/colors';
 import { Typography } from '../styles/typography';
@@ -32,7 +35,13 @@ export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { patientId, patientName, preferredName } = usePatientStore();
   const [nextReminder, setNextReminder] = useState<any>(null);
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [reminders, setReminders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingSchedules, setLoadingSchedules] = useState(true);
+  const [loadingReminders, setLoadingReminders] = useState(true);
+  const [acknowledgingReminders, setAcknowledgingReminders] = useState<Set<string>>(new Set());
+  const [emergencyPressTime, setEmergencyPressTime] = useState<number | null>(null);
 
   const displayName = preferredName || patientName || 'there';
 
@@ -71,6 +80,53 @@ export default function HomeScreen() {
     };
   }, []);
 
+  // Fetch schedules and reminders on mount
+  useEffect(() => {
+    if (patientId) {
+      fetchSchedules();
+      fetchReminders();
+    }
+  }, [patientId]);
+
+  const fetchSchedules = async () => {
+    if (!patientId) return;
+
+    try {
+      setLoadingSchedules(true);
+      const data = await apiService.getPatientSchedules(patientId);
+      console.log('Fetched schedules:', data);
+      setSchedules(data);
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+    } finally {
+      setLoadingSchedules(false);
+    }
+  };
+
+  const fetchReminders = async () => {
+    if (!patientId) return;
+
+    try {
+      setLoadingReminders(true);
+      const data = await apiService.getUpcomingReminders(patientId);
+      console.log('Fetched reminders:', data);
+      // Filter for today's reminders that are pending
+      const today = new Date();
+      const todayReminders = data.filter((reminder: any) => {
+        const reminderDate = new Date(reminder.due_at);
+        return (
+          reminderDate.toDateString() === today.toDateString() &&
+          reminder.status === 'pending'
+        );
+      });
+      setReminders(todayReminders);
+    } catch (error) {
+      console.error('Error fetching reminders:', error);
+    } finally {
+      setLoadingReminders(false);
+    }
+  };
+
   const sendHeartbeat = async (activityType: string) => {
     if (!patientId) return;
 
@@ -81,39 +137,90 @@ export default function HomeScreen() {
     }
   };
 
+  const formatTime = (timeString: string): string => {
+    // Convert "08:00:00" to "8:00 AM"
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours, 10);
+    const isPM = hour >= 12;
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:${minutes} ${isPM ? 'PM' : 'AM'}`;
+  };
+
+  const getScheduleIcon = (type: string): string => {
+    return type === 'medication' ? '💊' : '🍽️';
+  };
+
   const handleTalkPress = () => {
     navigation.navigate('VoiceChat', {});
   };
 
-  const handleEmergencyPress = () => {
+  // Emergency button - press and hold for 2 seconds
+  const handleEmergencyPressIn = () => {
+    setEmergencyPressTime(Date.now());
+    // Short vibration on press
+    Vibration.vibrate(50);
+  };
+
+  const handleEmergencyPressOut = async () => {
+    if (!emergencyPressTime) return;
+
+    const pressDuration = Date.now() - emergencyPressTime;
+    setEmergencyPressTime(null);
+
+    // Require 2 seconds hold
+    if (pressDuration < 2000) {
+      Alert.alert(
+        'Hold to Confirm',
+        'Press and hold the emergency button for 2 seconds to send an alert.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Confirmation vibration pattern (long-short-long)
+    Vibration.vibrate([0, 200, 100, 200]);
+
+    // Show confirmation dialog
     Alert.alert(
-      'Emergency Help',
-      'Are you sure you need emergency assistance?',
+      'Emergency Alert',
+      'Send emergency alert to your caregiver?',
       [
         {
           text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: 'Yes, I Need Help',
+          text: 'Send Alert',
           style: 'destructive',
           onPress: async () => {
             setLoading(true);
             try {
-              if (patientId) {
-                // Send emergency heartbeat
-                await apiService.sendHeartbeat(
-                  patientId,
-                  ACTIVITY_TYPES.EMERGENCY,
-                );
+              // Send emergency heartbeat using heartbeat service
+              await heartbeatService.sendEmergencyAlert();
 
-                Alert.alert(
-                  'Help is on the way',
-                  'Your caregiver has been notified.',
-                );
-              }
+              // Success vibration
+              Vibration.vibrate(500);
+
+              Alert.alert(
+                'Help is on the way! 🚨',
+                'Your caregiver has been notified and will contact you soon.',
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Optionally call caregiver (implement when we have caregiver phone number)
+                      // Linking.openURL('tel:+1234567890');
+                    },
+                  },
+                ]
+              );
             } catch (error) {
-              Alert.alert('Error', 'Could not send emergency alert');
+              console.error('Emergency alert error:', error);
+              Alert.alert(
+                'Error',
+                'Could not send emergency alert. The alert will be sent when connection is restored.',
+                [{ text: 'OK' }]
+              );
             } finally {
               setLoading(false);
             }
@@ -125,6 +232,40 @@ export default function HomeScreen() {
 
   const handleSettingsPress = () => {
     navigation.navigate('Settings');
+  };
+
+  const handleAcknowledgeReminder = async (reminderId: string, title: string) => {
+    // Prevent double-tap
+    if (acknowledgingReminders.has(reminderId)) return;
+
+    // Add to acknowledging set
+    setAcknowledgingReminders(prev => new Set(prev).add(reminderId));
+
+    try {
+      // Call API to acknowledge reminder
+      await apiService.acknowledgeReminder(reminderId, 'completed');
+
+      // Vibration feedback
+      Vibration.vibrate(50);
+
+      // Show success message
+      Alert.alert('Completed!', `Marked "${title}" as completed.`, [{ text: 'OK' }]);
+
+      // Refresh reminders list
+      await fetchReminders();
+    } catch (error) {
+      console.error('Error acknowledging reminder:', error);
+      Alert.alert('Error', 'Could not mark reminder as completed. Please try again.', [
+        { text: 'OK' },
+      ]);
+    } finally {
+      // Remove from acknowledging set
+      setAcknowledgingReminders(prev => {
+        const next = new Set(prev);
+        next.delete(reminderId);
+        return next;
+      });
+    }
   };
 
   return (
@@ -176,15 +317,67 @@ export default function HomeScreen() {
         <Text style={styles.talkButtonLabel}>TALK TO ME</Text>
       </View>
 
-      {/* Emergency Button */}
+      {/* Emergency Button - Press and Hold for 2 seconds */}
       <TouchableOpacity
-        style={styles.emergencyButton}
-        onPress={handleEmergencyPress}
+        style={[
+          styles.emergencyButton,
+          emergencyPressTime !== null && styles.emergencyButtonPressed,
+        ]}
+        onPressIn={handleEmergencyPressIn}
+        onPressOut={handleEmergencyPressOut}
         disabled={loading}
         activeOpacity={0.8}>
         <Text style={styles.emergencyIcon}>🚨</Text>
-        <Text style={styles.emergencyButtonText}>I NEED HELP</Text>
+        <Text style={styles.emergencyButtonText}>
+          {emergencyPressTime !== null ? 'HOLD...' : 'I NEED HELP'}
+        </Text>
       </TouchableOpacity>
+      {emergencyPressTime !== null && (
+        <Text style={styles.emergencyHint}>Keep holding...</Text>
+      )}
+
+      {/* Today's Reminders */}
+      <View style={styles.scheduleContainer}>
+        <Text style={styles.scheduleTitle}>TODAY'S REMINDERS</Text>
+        {loadingReminders ? (
+          <Text style={styles.scheduleText}>Loading...</Text>
+        ) : reminders.length > 0 ? (
+          reminders.map((reminder) => (
+            <View key={reminder.id} style={styles.reminderItem}>
+              <View style={styles.reminderItemContent}>
+                <Text style={styles.reminderItemIcon}>💊</Text>
+                <View style={styles.reminderItemDetails}>
+                  <Text style={styles.reminderItemTitle}>{reminder.title}</Text>
+                  <Text style={styles.reminderItemTime}>
+                    {new Date(reminder.due_at).toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true,
+                    })}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.checkmarkButton,
+                  acknowledgingReminders.has(reminder.id) && styles.checkmarkButtonDisabled,
+                ]}
+                onPress={() => handleAcknowledgeReminder(reminder.id, reminder.title)}
+                disabled={acknowledgingReminders.has(reminder.id)}>
+                <Text style={styles.checkmarkIcon}>
+                  {acknowledgingReminders.has(reminder.id) ? '⏳' : '✓'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ))
+        ) : (
+          <View style={styles.noRemindersContainer}>
+            <Text style={styles.noRemindersIcon}>✓</Text>
+            <Text style={styles.noRemindersText}>No pending reminders</Text>
+            <Text style={styles.noRemindersSubtext}>Great job!</Text>
+          </View>
+        )}
+      </View>
 
       {/* Status Bar */}
       <View style={styles.statusBar}>
@@ -294,12 +487,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.sm,
     shadowColor: Colors.emergency,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+  },
+  emergencyButtonPressed: {
+    backgroundColor: '#B71C1C', // Darker red when pressed
+    transform: [{ scale: 0.98 }],
   },
   emergencyIcon: {
     fontSize: 32,
@@ -309,6 +506,13 @@ const styles = StyleSheet.create({
     ...Typography.button,
     color: Colors.textInverse,
   },
+  emergencyHint: {
+    ...Typography.caption,
+    color: Colors.emergency,
+    textAlign: 'center',
+    marginBottom: Spacing.lg,
+    fontWeight: '600',
+  },
   statusBar: {
     paddingVertical: Spacing.sm,
   },
@@ -316,5 +520,125 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: Colors.textTertiary,
     textAlign: 'center',
+  },
+  scheduleContainer: {
+    width: '100%',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.lg,
+    ...Elevation.medium,
+  },
+  scheduleTitle: {
+    ...Typography.overline,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
+  },
+  scheduleText: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    paddingVertical: Spacing.lg,
+  },
+  scheduleItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  scheduleIcon: {
+    fontSize: 24,
+    marginRight: Spacing.md,
+  },
+  scheduleDetails: {
+    flex: 1,
+  },
+  scheduleItemTitle: {
+    ...Typography.bodyLarge,
+    color: Colors.text,
+    fontWeight: '600',
+  },
+  scheduleItemMed: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  scheduleTime: {
+    ...Typography.body,
+    color: Colors.primary,
+    fontWeight: '600',
+    marginLeft: Spacing.sm,
+  },
+  reminderItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  reminderItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  reminderItemIcon: {
+    fontSize: 28,
+    marginRight: Spacing.md,
+  },
+  reminderItemDetails: {
+    flex: 1,
+  },
+  reminderItemTitle: {
+    ...Typography.bodyLarge,
+    color: Colors.text,
+    fontWeight: '600',
+  },
+  reminderItemTime: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  checkmarkButton: {
+    width: 56,
+    height: 56,
+    backgroundColor: Colors.success,
+    borderRadius: BorderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Spacing.md,
+    shadowColor: Colors.success,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  checkmarkButtonDisabled: {
+    backgroundColor: Colors.textTertiary,
+    opacity: 0.5,
+  },
+  checkmarkIcon: {
+    fontSize: 32,
+    color: Colors.textInverse,
+  },
+  noRemindersContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  noRemindersIcon: {
+    fontSize: 48,
+    marginBottom: Spacing.sm,
+  },
+  noRemindersText: {
+    ...Typography.bodyLarge,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+  noRemindersSubtext: {
+    ...Typography.caption,
+    color: Colors.textTertiary,
+    marginTop: Spacing.xs,
   },
 });
