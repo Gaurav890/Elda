@@ -45,10 +45,15 @@ class NotificationService {
     try {
       console.log('[NotificationService] Initializing...');
 
+      // Small delay to ensure Firebase is ready
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Request permission
       const hasPermission = await this.requestPermission();
       if (!hasPermission) {
-        console.warn('[NotificationService] Permission denied');
+        console.warn('[NotificationService] Permission denied - skipping token registration');
+        // Still mark as initialized to prevent retry loops
+        this.initialized = true;
         return;
       }
 
@@ -62,6 +67,8 @@ class NotificationService {
       console.log('[NotificationService] Initialized successfully');
     } catch (error) {
       console.error('[NotificationService] Initialization error:', error);
+      // Mark as initialized even on error to prevent crash loops
+      this.initialized = true;
     }
   }
 
@@ -116,7 +123,13 @@ class NotificationService {
       });
 
       return token;
-    } catch (error) {
+    } catch (error: any) {
+      // iOS Simulator doesn't support APNs - this is expected
+      if (error?.code === 'messaging/unregistered') {
+        console.log('[NotificationService] Running on iOS Simulator - push notifications not available');
+        console.log('[NotificationService] This is normal - notifications will work on a real device');
+        return null;
+      }
       console.error('[NotificationService] Token registration error:', error);
       return null;
     }

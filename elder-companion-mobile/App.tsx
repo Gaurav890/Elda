@@ -15,12 +15,23 @@ function App(): JSX.Element {
 
   // Load settings and initialize notification service on app start
   useEffect(() => {
-    loadSettings();
+    const initializeApp = async () => {
+      try {
+        // Load settings first
+        await loadSettings();
 
-    // Initialize push notifications
-    notificationService.initialize().catch((error) => {
-      console.error('Failed to initialize notification service:', error);
-    });
+        // Then initialize push notifications (non-blocking)
+        setTimeout(() => {
+          notificationService.initialize().catch((error) => {
+            console.error('Failed to initialize notification service:', error);
+          });
+        }, 1000);
+      } catch (error) {
+        console.error('App initialization error:', error);
+      }
+    };
+
+    initializeApp();
   }, [loadSettings]);
 
   return (
