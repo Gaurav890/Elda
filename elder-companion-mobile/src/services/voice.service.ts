@@ -253,8 +253,16 @@ class VoiceService {
         case '9': // Insufficient permissions
           errorMessage = 'Microphone permission is required for voice conversations.';
           break;
+        case '1110': // No speech detected (common in simulator)
+          errorMessage = 'No speech detected. Note: Voice recognition may not work in iOS Simulator. Please test on a real device.';
+          break;
         default:
-          errorMessage = `Speech recognition error: ${e.error.message || e.error.code}`;
+          // Check if running in simulator
+          if (e.error.message?.includes('1110') || e.error.message?.includes('No speech')) {
+            errorMessage = 'No speech detected. Voice recognition works best on real devices.';
+          } else {
+            errorMessage = `Speech recognition error: ${e.error.message || e.error.code}`;
+          }
       }
     }
 

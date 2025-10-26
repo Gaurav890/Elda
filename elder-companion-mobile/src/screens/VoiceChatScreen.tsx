@@ -12,6 +12,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Animated,
+  Platform,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -201,6 +203,29 @@ export default function VoiceChatScreen() {
     }
   };
 
+  const handleTestVoice = () => {
+    Alert.prompt(
+      'Test Voice Input',
+      'Enter a test message to simulate voice input:',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Send',
+          onPress: (text) => {
+            if (text && text.trim()) {
+              handleVoiceInput(text.trim());
+            }
+          },
+        },
+      ],
+      'plain-text',
+      'Hello, how are you today?'
+    );
+  };
+
   const handleEndConversation = async () => {
     await voiceService.cancelListening();
     await ttsService.stop();
@@ -334,9 +359,16 @@ export default function VoiceChatScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={[styles.button, styles.testButton]}
+          onPress={handleTestVoice}
+          disabled={voiceState === 'processing' || voiceState === 'speaking'}>
+          <Text style={styles.buttonText}>🧪 Test</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={[styles.button, styles.endButton]}
           onPress={handleEndConversation}>
-          <Text style={styles.buttonText}>⏹️ End Conversation</Text>
+          <Text style={styles.buttonText}>⏹️ End</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -475,12 +507,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   micButton: {
-    flex: 1,
+    flex: 2,
     paddingVertical: 16,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     borderRadius: 12,
     alignItems: 'center',
     backgroundColor: '#2563eb',
@@ -502,16 +534,19 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     paddingVertical: 16,
-    paddingHorizontal: 24,
+    paddingHorizontal: 12,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  testButton: {
+    backgroundColor: '#10b981',
   },
   endButton: {
     backgroundColor: '#6b7280',
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
 });

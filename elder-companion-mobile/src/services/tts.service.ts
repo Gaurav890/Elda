@@ -1,7 +1,7 @@
 import Tts from 'react-native-tts';
 
 export interface TTSOptions {
-  speed?: number; // 0.7-1.0 for elderly (default: 0.9)
+  speed?: number; // 0.3-0.6 for elderly (default: 0.4)
   pitch?: number; // 0.5-2.0 (default: 1.0)
   language?: string; // 'en-US' (default)
 }
@@ -25,7 +25,7 @@ class TTSService {
   private currentMessageId?: string;
   private callbacks: TTSCallbacks = {};
   private defaultOptions: TTSOptions = {
-    speed: 0.9, // Slower speed for elderly users
+    speed: 0.4, // Much slower speed for elderly users (0.4 = 40% of normal speed)
     pitch: 1.0,
     language: 'en-US',
   };
@@ -39,8 +39,8 @@ class TTSService {
    */
   private async initializeTTS(): Promise<void> {
     try {
-      // Set default speech rate (0.9 for elderly users)
-      await Tts.setDefaultRate(this.defaultOptions.speed || 0.9);
+      // Set default speech rate (0.4 = 40% speed for elderly users)
+      await Tts.setDefaultRate(this.defaultOptions.speed || 0.4);
 
       // Set default pitch
       await Tts.setDefaultPitch(this.defaultOptions.pitch || 1.0);
