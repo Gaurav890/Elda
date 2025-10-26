@@ -3,7 +3,7 @@
  * Main screen with Talk button, next reminder, and emergency button
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -32,6 +33,33 @@ export default function HomeScreen() {
 
   const displayName = preferredName || patientName || 'there';
 
+  // Pulsing animation for "TALK TO ME" button
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Create pulsing animation (1.2s interval)
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    pulseAnimation.start();
+
+    return () => {
+      pulseAnimation.stop();
+    };
+  }, [pulseAnim]);
+
   // Send app_open heartbeat on mount
   useEffect(() => {
     sendHeartbeat('app_open');
@@ -51,7 +79,7 @@ export default function HomeScreen() {
   };
 
   const handleTalkPress = () => {
-    navigation.navigate('VoiceChat');
+    navigation.navigate('VoiceChat', {});
   };
 
   const handleEmergencyPress = () => {
@@ -128,14 +156,20 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Main Talk Button */}
-      <TouchableOpacity
-        style={styles.talkButton}
-        onPress={handleTalkPress}
-        activeOpacity={0.8}>
-        <Text style={styles.talkIcon}>🎤</Text>
-        <Text style={styles.talkButtonText}>TALK TO ME</Text>
-      </TouchableOpacity>
+      {/* Main Talk Button with pulsing animation */}
+      <Animated.View
+        style={[
+          styles.talkButtonContainer,
+          { transform: [{ scale: pulseAnim }] },
+        ]}>
+        <TouchableOpacity
+          style={styles.talkButton}
+          onPress={handleTalkPress}
+          activeOpacity={0.8}>
+          <Text style={styles.talkIcon}>🎤</Text>
+          <Text style={styles.talkButtonText}>TALK TO ME</Text>
+        </TouchableOpacity>
+      </Animated.View>
 
       {/* Emergency Button */}
       <TouchableOpacity
@@ -225,6 +259,10 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
     marginTop: 4,
   },
+  talkButtonContainer: {
+    width: '100%',
+    marginBottom: 20,
+  },
   talkButton: {
     width: '100%',
     backgroundColor: '#2563eb',
@@ -232,7 +270,6 @@ const styles = StyleSheet.create({
     paddingVertical: 36,
     paddingHorizontal: 32,
     alignItems: 'center',
-    marginBottom: 20,
     shadowColor: '#2563eb',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
