@@ -23,6 +23,9 @@ import { useConversationStore } from '../stores/conversation.store';
 import { apiService } from '../services/api.service';
 import { voiceService } from '../services/voice.service';
 import { ttsService } from '../services/tts.service';
+import { Colors } from '../styles/colors';
+import { Typography } from '../styles/typography';
+import { Spacing, BorderRadius, Elevation } from '../styles/spacing';
 
 type VoiceChatNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -255,7 +258,7 @@ export default function VoiceChatScreen() {
       case 'processing':
         return (
           <View style={styles.listeningContainer}>
-            <ActivityIndicator size="large" color="#2563eb" />
+            <ActivityIndicator size="large" color={Colors.primary} />
             <Text style={styles.processingText}>Processing...</Text>
           </View>
         );
@@ -378,29 +381,29 @@ export default function VoiceChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: Colors.surface,
   },
   header: {
     paddingTop: 60,
-    paddingBottom: 16,
-    paddingHorizontal: 24,
+    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.surface,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    ...Typography.h2,
+    color: Colors.text,
   },
   listeningContainer: {
-    padding: 24,
-    backgroundColor: '#f3f4f6',
+    padding: Spacing.lg,
+    backgroundColor: Colors.background,
     alignItems: 'center',
     minHeight: 120,
     justifyContent: 'center',
   },
   waveform: {
-    padding: 16,
+    padding: Spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -408,145 +411,143 @@ const styles = StyleSheet.create({
     fontSize: 48,
   },
   listeningText: {
-    fontSize: 20,
-    color: '#2563eb',
-    fontWeight: '600',
-    marginTop: 8,
+    ...Typography.h3,
+    color: Colors.listening,
+    marginTop: Spacing.sm,
   },
   transcribedText: {
-    fontSize: 16,
-    color: '#4b5563',
-    marginTop: 12,
+    ...Typography.body,
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
     textAlign: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.md,
   },
   processingText: {
-    fontSize: 18,
-    color: '#6b7280',
-    marginTop: 12,
-    fontWeight: '500',
+    ...Typography.bodyLarge,
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
   },
   speakingIcon: {
     fontSize: 48,
   },
   speakingText: {
-    fontSize: 20,
-    color: '#10b981',
-    fontWeight: '600',
-    marginTop: 8,
+    ...Typography.h3,
+    color: Colors.speaking,
+    marginTop: Spacing.sm,
   },
   errorIcon: {
     fontSize: 48,
   },
   errorText: {
-    fontSize: 16,
-    color: '#dc2626',
-    marginTop: 8,
+    ...Typography.body,
+    color: Colors.error,
+    marginTop: Spacing.sm,
     textAlign: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.md,
   },
   idleText: {
-    fontSize: 18,
-    color: '#9ca3af',
-    fontWeight: '500',
+    ...Typography.bodyLarge,
+    color: Colors.textTertiary,
   },
   messagesContainer: {
     flex: 1,
   },
   messagesContent: {
-    padding: 16,
+    padding: Spacing.md,
     flexGrow: 1,
   },
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 48,
+    paddingVertical: Spacing.xxxl,
   },
   emptyStateText: {
-    fontSize: 16,
-    color: '#9ca3af',
+    ...Typography.body,
+    color: Colors.textTertiary,
     textAlign: 'center',
   },
   messageContainer: {
     maxWidth: '80%',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.sm,
+    ...Elevation.small,
   },
   patientMessage: {
-    backgroundColor: '#2563eb',
+    backgroundColor: Colors.primary,
     alignSelf: 'flex-end',
   },
   aiMessage: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: Colors.background,
     alignSelf: 'flex-start',
   },
   messageText: {
-    fontSize: 18,
-    lineHeight: 24,
+    ...Typography.bodyLarge,
   },
   patientText: {
-    color: '#ffffff',
+    color: Colors.textInverse,
   },
   aiText: {
-    color: '#1f2937',
+    color: Colors.text,
   },
   messageTime: {
-    fontSize: 12,
-    marginTop: 4,
+    ...Typography.caption,
+    marginTop: Spacing.xs,
   },
   patientTimeText: {
-    color: '#dbeafe',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   aiTimeText: {
-    color: '#9ca3af',
+    color: Colors.textTertiary,
   },
   actionContainer: {
-    padding: 16,
+    padding: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: Colors.border,
     flexDirection: 'row',
-    gap: 8,
+    gap: Spacing.sm,
+    backgroundColor: Colors.surface,
   },
   micButton: {
     flex: 2,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
-    backgroundColor: '#2563eb',
+    backgroundColor: Colors.primary,
     flexDirection: 'row',
     justifyContent: 'center',
+    ...Elevation.small,
   },
   micButtonActive: {
-    backgroundColor: '#dc2626',
+    backgroundColor: Colors.error,
   },
   micIcon: {
     fontSize: 24,
-    marginRight: 8,
+    marginRight: Spacing.sm,
   },
   micButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
+    ...Typography.button,
+    color: Colors.textInverse,
   },
   button: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
+    ...Elevation.small,
   },
   testButton: {
-    backgroundColor: '#10b981',
+    backgroundColor: Colors.success,
   },
   endButton: {
-    backgroundColor: '#6b7280',
+    backgroundColor: Colors.textSecondary,
   },
   buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
+    ...Typography.buttonSmall,
+    color: Colors.textInverse,
     fontWeight: '600',
   },
 });

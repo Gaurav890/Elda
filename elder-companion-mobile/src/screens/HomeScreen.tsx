@@ -19,6 +19,9 @@ import { RootStackParamList } from '../types';
 import { usePatientStore } from '../stores/patient.store';
 import { apiService } from '../services/api.service';
 import { ACTIVITY_TYPES } from '../config/constants';
+import { Colors } from '../styles/colors';
+import { Typography } from '../styles/typography';
+import { Spacing, BorderRadius, Elevation } from '../styles/spacing';
 
 type HomeScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -156,20 +159,22 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Main Talk Button with pulsing animation */}
-      <Animated.View
-        style={[
-          styles.talkButtonContainer,
-          { transform: [{ scale: pulseAnim }] },
-        ]}>
-        <TouchableOpacity
-          style={styles.talkButton}
-          onPress={handleTalkPress}
-          activeOpacity={0.8}>
-          <Text style={styles.talkIcon}>🎤</Text>
-          <Text style={styles.talkButtonText}>TALK TO ME</Text>
-        </TouchableOpacity>
-      </Animated.View>
+      {/* Main Talk Button with pulsing animation - CIRCULAR */}
+      <View style={styles.talkButtonContainer}>
+        <Animated.View
+          style={[
+            styles.talkButtonAnimated,
+            { transform: [{ scale: pulseAnim }] },
+          ]}>
+          <TouchableOpacity
+            style={styles.talkButton}
+            onPress={handleTalkPress}
+            activeOpacity={0.8}>
+            <Text style={styles.talkIcon}>🎤</Text>
+          </TouchableOpacity>
+        </Animated.View>
+        <Text style={styles.talkButtonLabel}>TALK TO ME</Text>
+      </View>
 
       {/* Emergency Button */}
       <TouchableOpacity
@@ -194,10 +199,10 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: Colors.background,
   },
   contentContainer: {
-    padding: 24,
+    padding: Spacing.lg,
     alignItems: 'center',
   },
   header: {
@@ -205,98 +210,92 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
-    marginTop: 20,
+    marginBottom: Spacing.xl,
+    marginTop: Spacing.md,
   },
   greeting: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    ...Typography.h1,
+    color: Colors.text,
   },
   settingsButton: {
-    padding: 8,
+    padding: Spacing.sm,
   },
   settingsIcon: {
     fontSize: 32,
   },
   reminderCard: {
     width: '100%',
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 32,
-    marginBottom: 32,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    marginBottom: Spacing.xl,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    ...Elevation.medium,
   },
   reminderTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6b7280',
-    letterSpacing: 1,
-    marginBottom: 16,
+    ...Typography.overline,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
   },
   reminderIcon: {
     fontSize: 48,
-    marginBottom: 12,
+    marginBottom: Spacing.sm,
   },
   reminderText: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#1f2937',
+    ...Typography.h3,
+    color: Colors.text,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.xs,
   },
   reminderTime: {
-    fontSize: 18,
-    color: '#6b7280',
+    ...Typography.bodyLarge,
+    color: Colors.textSecondary,
   },
   reminderSubtext: {
-    fontSize: 16,
-    color: '#9ca3af',
-    marginTop: 4,
+    ...Typography.body,
+    color: Colors.textTertiary,
+    marginTop: Spacing.xs,
   },
   talkButtonContainer: {
     width: '100%',
-    marginBottom: 20,
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  talkButtonAnimated: {
+    marginBottom: Spacing.md,
   },
   talkButton: {
-    width: '100%',
-    backgroundColor: '#2563eb',
-    borderRadius: 24,
-    paddingVertical: 36,
-    paddingHorizontal: 32,
+    width: 160,
+    height: 160,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.full,
     alignItems: 'center',
-    shadowColor: '#2563eb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    justifyContent: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 12,
   },
   talkIcon: {
-    fontSize: 48,
-    marginBottom: 8,
+    fontSize: 64,
   },
-  talkButtonText: {
-    color: '#ffffff',
-    fontSize: 28,
-    fontWeight: 'bold',
-    letterSpacing: 1,
+  talkButtonLabel: {
+    ...Typography.buttonLarge,
+    color: Colors.primary,
+    letterSpacing: 1.5,
   },
   emergencyButton: {
     width: '100%',
-    backgroundColor: '#dc2626',
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 32,
+    backgroundColor: Colors.emergency,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 32,
-    shadowColor: '#dc2626',
+    marginBottom: Spacing.xl,
+    shadowColor: Colors.emergency,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -304,20 +303,18 @@ const styles = StyleSheet.create({
   },
   emergencyIcon: {
     fontSize: 32,
-    marginRight: 12,
+    marginRight: Spacing.sm,
   },
   emergencyButtonText: {
-    color: '#ffffff',
-    fontSize: 22,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+    ...Typography.button,
+    color: Colors.textInverse,
   },
   statusBar: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.sm,
   },
   statusText: {
-    fontSize: 14,
-    color: '#9ca3af',
+    ...Typography.caption,
+    color: Colors.textTertiary,
     textAlign: 'center',
   },
 });

@@ -55,5 +55,12 @@
 	<string>Elder Companion needs access to your microphone to have voice conversations with you</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Elder Companion needs speech recognition to understand your voice and respond to your needs</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>fetch</string>
+	</array>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 </dict>
 </plist>

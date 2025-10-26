@@ -9,16 +9,16 @@ PODS:
     - React-Core (= 0.72.6)
     - React-jsi (= 0.72.6)
     - ReactCommon/turbomodule/core (= 0.72.6)
-  - Firebase/CoreOnly (10.20.0):
-    - FirebaseCore (= 10.20.0)
-  - Firebase/Messaging (10.20.0):
+  - Firebase/CoreOnly (10.17.0):
+    - FirebaseCore (= 10.17.0)
+  - Firebase/Messaging (10.17.0):
     - Firebase/CoreOnly
-    - FirebaseMessaging (~> 10.20.0)
-  - FirebaseCore (10.20.0):
+    - FirebaseMessaging (~> 10.17.0)
+  - FirebaseCore (10.17.0):
     - FirebaseCoreInternal (~> 10.0)
-    - GoogleUtilities/Environment (~> 7.12)
-    - GoogleUtilities/Logger (~> 7.12)
-  - FirebaseCoreExtension (10.20.0):
+    - GoogleUtilities/Environment (~> 7.8)
+    - GoogleUtilities/Logger (~> 7.8)
+  - FirebaseCoreExtension (10.17.0):
     - FirebaseCore (~> 10.0)
   - FirebaseCoreInternal (10.29.0):
     - "GoogleUtilities/NSData+zlib (~> 7.8)"
@@ -27,10 +27,10 @@ PODS:
     - GoogleUtilities/Environment (~> 7.8)
     - GoogleUtilities/UserDefaults (~> 7.8)
     - PromisesObjC (~> 2.1)
-  - FirebaseMessaging (10.20.0):
+  - FirebaseMessaging (10.17.0):
     - FirebaseCore (~> 10.0)
     - FirebaseInstallations (~> 10.0)
-    - GoogleDataTransport (~> 9.3)
+    - GoogleDataTransport (~> 9.2)
     - GoogleUtilities/AppDelegateSwizzler (~> 7.8)
     - GoogleUtilities/Environment (~> 7.8)
     - GoogleUtilities/Reachability (~> 7.8)
@@ -497,12 +497,12 @@ PODS:
     - React-Core
   - RNCAsyncStorage (1.24.0):
     - React-Core
-  - RNFBApp (18.9.0):
-    - Firebase/CoreOnly (= 10.20.0)
+  - RNFBApp (18.6.1):
+    - Firebase/CoreOnly (= 10.17.0)
     - React-Core
-  - RNFBMessaging (18.9.0):
-    - Firebase/Messaging (= 10.20.0)
-    - FirebaseCoreExtension (= 10.20.0)
+  - RNFBMessaging (18.6.1):
+    - Firebase/Messaging (= 10.17.0)
+    - FirebaseCoreExtension (= 10.17.0)
     - React-Core
     - RNFBApp
   - RNGestureHandler (2.29.0):
@@ -692,12 +692,12 @@ SPEC CHECKSUMS:
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: 748c0ef74f2bf4b36cfcccf37916806940a64c32
   FBReactNativeSpec: 966f29e4e697de53a3b366355e8f57375c856ad9
-  Firebase: 10c8cb12fb7ad2ae0c09ffc86cd9c1ab392a0031
-  FirebaseCore: 28045c1560a2600d284b9c45a904fe322dc890b6
-  FirebaseCoreExtension: 0659f035b88c5a7a15a9763c48c2e6ca8c0a2977
+  Firebase: f4ac0b02927af9253ae094d23deecf0890da7374
+  FirebaseCore: 534544dd98cabcf4bf8598d88ec683b02319a528
+  FirebaseCoreExtension: 47720bb330d7041047c0935a34a3a4b92f818074
   FirebaseCoreInternal: df84dd300b561c27d5571684f389bf60b0a5c934
   FirebaseInstallations: 913cf60d0400ebd5d6b63a28b290372ab44590dd
-  FirebaseMessaging: 06c414a21b122396a26847c523d5c370f8325df5
+  FirebaseMessaging: 1367b28c0c83a63072af4a711328fcc2e6899902
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   GoogleDataTransport: 6c09b596d841063d76d4288cc2d2f42cc36e1e2a
@@ -743,8 +743,8 @@ SPEC CHECKSUMS:
   ReactCommon: 2060ee7b68e71d23849968f6406550ba2df71bdb
   RNBackgroundFetch: e44c9e85d7fb3122c37d8a806278f62c7682d7ea
   RNCAsyncStorage: b6410dead2732b5c72a7fdb1ecb5651bbcf4674b
-  RNFBApp: 20bfba7e2a61a959518c1d57e5d48817c62ed3f6
-  RNFBMessaging: 48579eec1f6ffaed4038b67426d7076963ab9401
+  RNFBApp: 2d6cea6e172c61a0f7e8813260f7671196f11b44
+  RNFBMessaging: 63ef52ec4bbaaad07c00891c0411ec701fc58666
   RNGestureHandler: dc7085d608284f7a5072a4abd382c9bf5bd2e07f
   RNScreens: c1a851e518284641160aa5af4894479773a6e719
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
