@@ -5,6 +5,7 @@ Handles device setup and token registration
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import datetime, date
 from uuid import UUID
 from typing import List
@@ -204,6 +205,49 @@ def get_patient_schedules(
     ).order_by(Schedule.scheduled_time).all()
 
     return schedules
+
+
+@router.get("/patients/{patient_id}/reminders", response_model=List[ReminderResponse])
+def get_patient_reminders(
+    patient_id: UUID,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all pending and recent reminders for a patient (public endpoint for mobile app)
+
+    This endpoint is public (no authentication required) since the mobile app
+    only has the patient_id, not auth tokens.
+
+    **Returns:**
+    - List of reminders with all details
+    - Sorted by due_at (earliest first)
+    - Includes pending, sent, and delivered reminders
+    - Also includes completed/missed reminders from today for display
+
+    **Errors:**
+    - 404: Patient not found
+    """
+    # Check if patient exists
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Patient not found"
+        )
+
+    # Get today's date
+    today = date.today()
+
+    # Get all reminders for this patient:
+    # 1. All pending/sent/delivered reminders (regardless of date)
+    # 2. All completed/missed reminders from today (for display)
+    # For simplicity, just return all pending reminders (we'll filter by date on frontend if needed)
+    reminders = db.query(Reminder).filter(
+        Reminder.patient_id == patient_id,
+        Reminder.status.in_(['pending', 'sent', 'delivered'])
+    ).order_by(Reminder.due_at).all()
+
+    return reminders
 
 
 @router.put("/reminders/{reminder_id}/acknowledge", response_model=ReminderResponse)

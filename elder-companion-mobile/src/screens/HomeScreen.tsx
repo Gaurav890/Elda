@@ -14,6 +14,7 @@ import {
   Animated,
   Vibration,
   Linking,
+  RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -21,6 +22,7 @@ import { RootStackParamList } from '../types';
 import { usePatientStore } from '../stores/patient.store';
 import { apiService } from '../services/api.service';
 import { heartbeatService } from '../services/heartbeat.service';
+import { localNotificationService } from '../services/local-notification.service';
 import { ACTIVITY_TYPES } from '../config/constants';
 import { Colors } from '../styles/colors';
 import { Typography } from '../styles/typography';
@@ -40,6 +42,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(false);
   const [loadingSchedules, setLoadingSchedules] = useState(true);
   const [loadingReminders, setLoadingReminders] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [acknowledgingReminders, setAcknowledgingReminders] = useState<Set<string>>(new Set());
   const [emergencyPressTime, setEmergencyPressTime] = useState<number | null>(null);
 
@@ -80,6 +83,11 @@ export default function HomeScreen() {
     };
   }, []);
 
+  // Initialize local notification service
+  useEffect(() => {
+    localNotificationService.initialize();
+  }, []);
+
   // Fetch schedules and reminders on mount
   useEffect(() => {
     if (patientId) {
@@ -87,6 +95,86 @@ export default function HomeScreen() {
       fetchReminders();
     }
   }, [patientId]);
+
+  // Auto-refresh reminders every 60 seconds
+  useEffect(() => {
+    if (!patientId) return;
+
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing reminders...');
+      fetchReminders();
+    }, 60000); // 60 seconds
+
+    return () => clearInterval(interval);
+  }, [patientId]);
+
+  // Update "Next Reminder" section whenever reminders change
+  useEffect(() => {
+    if (reminders.length > 0) {
+      // Sort by due_at to find earliest reminder
+      const sorted = [...reminders].sort((a, b) =>
+        new Date(a.due_at).getTime() - new Date(b.due_at).getTime()
+      );
+
+      const next = sorted[0];
+      setNextReminder({
+        title: next.title,
+        time: new Date(next.due_at).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        })
+      });
+
+      console.log('📍 Next reminder:', next.title, 'at', new Date(next.due_at).toLocaleTimeString());
+    } else {
+      setNextReminder(null);
+      console.log('📍 No upcoming reminders');
+    }
+  }, [reminders]);
+
+  // Schedule local notifications for all pending reminders
+  useEffect(() => {
+    // Use setTimeout to avoid setState during render warnings
+    const scheduleLocalNotifications = async () => {
+      if (reminders.length === 0) return;
+
+      console.log(`📱 Scheduling ${reminders.length} local notifications...`);
+
+      for (const reminder of reminders) {
+        try {
+          const dueTime = new Date(reminder.due_at);
+          const now = new Date();
+
+          // Only schedule if reminder is in the future
+          if (dueTime > now) {
+            // Schedule initial notification + 3 retry notifications (15, 20, 25 min later)
+            await localNotificationService.scheduleReminderWithRetries({
+              id: reminder.id,
+              title: reminder.title || 'Reminder',
+              body: reminder.message || reminder.description || '',
+              scheduledTime: dueTime,
+              reminderId: reminder.id,
+              reminderType: reminder.type || 'other',
+              speakText: reminder.message || reminder.title,
+              requiresResponse: true,
+            });
+
+            console.log(`✅ Scheduled notification with retries for: ${reminder.title} at ${dueTime.toLocaleTimeString()}`);
+          }
+        } catch (error) {
+          console.error(`❌ Error scheduling notification for ${reminder.title}:`, error);
+        }
+      }
+    };
+
+    // Delay scheduling to avoid render cycle conflicts
+    const timeoutId = setTimeout(() => {
+      scheduleLocalNotifications();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [reminders]);
 
   const fetchSchedules = async () => {
     if (!patientId) return;
@@ -234,6 +322,20 @@ export default function HomeScreen() {
     navigation.navigate('Settings');
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        fetchSchedules(),
+        fetchReminders(),
+      ]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleAcknowledgeReminder = async (reminderId: string, title: string) => {
     // Prevent double-tap
     if (acknowledgingReminders.has(reminderId)) return;
@@ -244,6 +346,10 @@ export default function HomeScreen() {
     try {
       // Call API to acknowledge reminder
       await apiService.acknowledgeReminder(reminderId, 'completed');
+
+      // Cancel all local notifications for this reminder (including retries)
+      await localNotificationService.cancelReminderNotifications(reminderId);
+      console.log(`🔕 Cancelled all notifications (including retries) for: ${title}`);
 
       // Vibration feedback
       Vibration.vibrate(50);
@@ -271,7 +377,15 @@ export default function HomeScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.contentContainer}>
+      contentContainerStyle={styles.contentContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          colors={['#2563eb']}
+          tintColor="#2563eb"
+        />
+      }>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.greeting}>Hi {displayName}! 😊</Text>

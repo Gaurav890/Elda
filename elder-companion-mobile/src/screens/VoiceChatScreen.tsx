@@ -15,7 +15,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import { usePatientStore } from '../stores/patient.store';
@@ -32,10 +32,14 @@ type VoiceChatNavigationProp = StackNavigationProp<
   'VoiceChat'
 >;
 
+type VoiceChatRouteProp = RouteProp<RootStackParamList, 'VoiceChat'>;
+
 type VoiceState = 'idle' | 'listening' | 'processing' | 'speaking' | 'error';
 
 export default function VoiceChatScreen() {
   const navigation = useNavigation<VoiceChatNavigationProp>();
+  const route = useRoute<VoiceChatRouteProp>();
+  const { reminderId, autoStart } = route.params || {};
   const { patientId } = usePatientStore();
   const {
     messages,
@@ -114,16 +118,27 @@ export default function VoiceChatScreen() {
       },
       onFinish: () => {
         console.log('TTS finished');
+        console.log('🔄 Auto-restarting listening for continuous conversation');
         setVoiceState('idle');
+        // Automatically restart listening after TTS finishes (continuous conversation mode)
+        setTimeout(() => {
+          startListening();
+        }, 1000); // 1 second delay to give user time to process response
       },
       onError: (error) => {
         console.error('TTS error:', error);
         setVoiceState('idle');
+        // Also restart on error
+        setTimeout(() => {
+          startListening();
+        }, 1000);
       },
     });
 
-    // Auto-start listening when screen opens
-    startListening();
+    // Auto-start listening when screen opens (unless autoStart mode)
+    if (!autoStart) {
+      startListening();
+    }
 
     // Cleanup on unmount
     return () => {
@@ -133,7 +148,42 @@ export default function VoiceChatScreen() {
         clearInterval(processingTimerRef.current);
       }
     };
-  }, []);
+  }, [autoStart]);
+
+  // Handle auto-initiated check-in mode (when opened from retry notification)
+  useEffect(() => {
+    if (autoStart) {
+      console.log('[VoiceChat] Auto-start mode enabled - initiating voice check-in');
+
+      const initiateCheckIn = async () => {
+        // Wait a moment for screen to settle
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Generate greeting message
+        const greeting = "Hi! I noticed you haven't responded to a reminder. Did you take your medication?";
+
+        console.log('[VoiceChat] Speaking auto-initiated greeting:', greeting);
+
+        // Add AI message
+        addMessage(greeting, 'ai');
+
+        // Set speaking state
+        setVoiceState('speaking');
+
+        // Speak the greeting
+        await ttsService.speak(greeting);
+
+        // TTS onFinish callback will automatically start listening
+        console.log('[VoiceChat] Auto-initiated greeting complete - waiting for TTS to finish and start listening');
+      };
+
+      initiateCheckIn().catch(error => {
+        console.error('[VoiceChat] Error in auto-initiated check-in:', error);
+        // Fallback to normal listening mode
+        startListening();
+      });
+    }
+  }, [autoStart, addMessage]);
 
   // Waveform animation when listening
   useEffect(() => {
@@ -270,17 +320,8 @@ export default function VoiceChatScreen() {
       console.log('Playing TTS response:', response.ai_response);
       await ttsService.speak(response.ai_response);
 
-      // Continue conversation if needed (default to false if not provided)
-      const shouldContinue = response.continue_conversation || false;
-      if (shouldContinue) {
-        // Wait for TTS to finish, then restart listening
-        // The TTS onFinish callback will set state to idle, then we can restart
-        setTimeout(() => {
-          if (voiceState === 'idle') {
-            startListening();
-          }
-        }, 500);
-      }
+      // Note: TTS onFinish callback will automatically restart listening
+      // See TTS callback configuration in useEffect
     } catch (error) {
       // Stop timer
       if (processingTimerRef.current) {
@@ -294,6 +335,7 @@ export default function VoiceChatScreen() {
       addMessage(errorMsg, 'ai');
       setVoiceState('speaking');
       await ttsService.speak(errorMsg);
+      // Note: TTS onFinish callback will automatically restart listening
     }
   };
 

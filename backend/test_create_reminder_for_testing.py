@@ -76,7 +76,7 @@ def create_test_reminder():
             patient_id=patient.id,
             schedule_id=schedule.id,
             title=f"[TEST] {schedule.title}",
-            description="This is a test reminder to test acknowledgment flow",
+            message="This is a test reminder to test acknowledgment flow",
             due_at=due_at,
             status="pending",
             retry_count=0,

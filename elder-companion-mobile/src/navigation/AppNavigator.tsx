@@ -8,6 +8,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import { usePatientStore } from '../stores/patient.store';
+import { navigationRef } from '../services/navigation.service';
 
 // Screens
 import SetupScreen from '../screens/SetupScreen';
@@ -26,7 +27,7 @@ export function AppNavigator() {
   }, [loadPatientData]);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         initialRouteName={isSetupComplete ? 'Home' : 'Setup'}
         screenOptions={{

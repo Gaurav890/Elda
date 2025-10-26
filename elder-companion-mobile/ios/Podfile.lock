@@ -518,6 +518,13 @@ PODS:
   - RNGestureHandler (2.29.0):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
+  - RNNotifee (9.1.8):
+    - React-Core
+    - RNNotifee/NotifeeCore (= 9.1.8)
+  - RNNotifee/NotifeeCore (9.1.8):
+    - React-Core
+  - RNPermissions (5.4.2):
+    - React-Core
   - RNScreens (3.37.0):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
@@ -578,6 +585,8 @@ DEPENDENCIES:
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - "RNNotifee (from `../node_modules/@notifee/react-native`)"
+  - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - TextToSpeech (from `../node_modules/react-native-tts`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -696,6 +705,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-firebase/messaging"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNNotifee:
+    :path: "../node_modules/@notifee/react-native"
+  RNPermissions:
+    :path: "../node_modules/react-native-permissions"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   TextToSpeech:
@@ -764,6 +777,8 @@ SPEC CHECKSUMS:
   RNFBApp: 2d6cea6e172c61a0f7e8813260f7671196f11b44
   RNFBMessaging: 63ef52ec4bbaaad07c00891c0411ec701fc58666
   RNGestureHandler: dc7085d608284f7a5072a4abd382c9bf5bd2e07f
+  RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
+  RNPermissions: 0b0cdb0dfcc2fabc136a3d596220cc3d91977d79
   RNScreens: c1a851e518284641160aa5af4894479773a6e719
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   TextToSpeech: c5dd8320193bf69930cfe972c4127ca3dc8c878e

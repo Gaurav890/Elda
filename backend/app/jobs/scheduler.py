@@ -65,10 +65,10 @@ def init_scheduler():
         max_instances=1
     )
 
-    # Run every 10 minutes to retry unacknowledged reminders
+    # Run every 5 minutes to retry unacknowledged reminders
     scheduler.add_job(
         func=retry_unacknowledged_reminders,
-        trigger=IntervalTrigger(minutes=10),
+        trigger=IntervalTrigger(minutes=5),
         id="retry_reminders",
         name="Retry unacknowledged reminders",
         replace_existing=True,

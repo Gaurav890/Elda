@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Schedule, ScheduleType, DayOfWeek } from '@/types/schedule';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -92,6 +93,17 @@ function formatRecurrence(schedule: Schedule): string {
 }
 
 export function ScheduleList({ schedules, onEdit, onDelete, onToggleActive }: ScheduleListProps) {
+  // Fix hydration errors by only rendering on client
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="h-64 w-full animate-pulse bg-gray-100 rounded-lg" />;
+  }
+
   if (schedules.length === 0) {
     return null;
   }

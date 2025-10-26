@@ -12,7 +12,7 @@ from uuid import UUID
 
 class ScheduleBase(BaseModel):
     """Base schema for schedule"""
-    type: str = Field(..., pattern="^(medication|meal)$")
+    type: str = Field(..., pattern="^(medication|meal|exercise|appointment|other)$")
     title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
     medication_name: Optional[str] = Field(None, max_length=200)
@@ -30,7 +30,7 @@ class ScheduleCreate(ScheduleBase):
 
 class ScheduleUpdate(BaseModel):
     """Schema for updating a schedule"""
-    type: Optional[str] = Field(None, pattern="^(medication|meal)$")
+    type: Optional[str] = Field(None, pattern="^(medication|meal|exercise|appointment|other)$")
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
     medication_name: Optional[str] = Field(None, max_length=200)

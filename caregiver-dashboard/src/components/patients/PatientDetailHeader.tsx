@@ -28,9 +28,16 @@ export function PatientDetailHeader({
   // QR Code modal state
   const [showQRModal, setShowQRModal] = useState(false);
 
+  // Fix hydration issue: Only render on client
+  const [mounted, setMounted] = useState(false);
+
   // Fix hydration issue: Calculate time on client only
   const [lastActivity, setLastActivity] = useState('No recent activity');
   const [deviceStatus, setDeviceStatus] = useState<'online' | 'offline' | 'never'>('never');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (patient.last_active_at) {
@@ -55,6 +62,28 @@ export function PatientDetailHeader({
       setDeviceStatus('never');
     }
   }, [patient.last_active_at, patient.last_heartbeat_at, patient.device_setup_completed]);
+
+  // Return placeholder during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="border-b bg-white">
+        <div className="px-6 py-6">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-4">
+              <div className="h-20 w-20 rounded-full bg-gray-200 animate-pulse" />
+              <div className="flex flex-col gap-2">
+                <div className="h-8 w-48 bg-gray-200 animate-pulse rounded" />
+                <div className="flex gap-2">
+                  <div className="h-6 w-20 bg-gray-200 animate-pulse rounded" />
+                  <div className="h-6 w-24 bg-gray-200 animate-pulse rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="border-b bg-white">

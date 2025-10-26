@@ -15,6 +15,7 @@ import { Platform, Alert } from 'react-native';
 import { storageService } from './storage.service';
 import { apiService } from './api.service';
 import { ttsService } from './tts.service';
+import * as NavigationService from './navigation.service';
 
 const STORAGE_KEY_FCM_TOKEN = 'fcm_token';
 
@@ -25,6 +26,8 @@ export interface NotificationPayload {
   reminder_type?: string; // medication, meal, exercise, etc.
   speak_text?: string; // TTS message from backend
   requires_response?: boolean;
+  voice_check_in?: boolean; // Flag for retry notifications that should open voice chat
+  retry_count?: string; // Number of retries for this reminder
 
   // Legacy/general fields
   patient_id?: string;
@@ -207,6 +210,24 @@ class NotificationService {
 
       console.log('[NotificationService] Foreground payload:', payload);
 
+      // Check if this is a retry with voice check-in flag
+      if (payload.voice_check_in) {
+        console.log('[NotificationService] Voice check-in requested - opening VoiceChat');
+        console.log(`[NotificationService] Retry count: ${payload.retry_count || 'unknown'}`);
+
+        // Navigate to VoiceChat immediately
+        NavigationService.navigate('VoiceChat', {
+          reminderId: payload.reminder_id,
+          autoStart: true, // Flag to auto-start check-in mode
+        });
+
+        // Play TTS
+        const ttsMessage = payload.speak_text || payload.tts_message || payload.message;
+        await ttsService.speak(ttsMessage);
+
+        return; // Skip the alert dialog for voice check-in
+      }
+
       // Play TTS for reminders (backend sends speak_text)
       const shouldPlayTTS =
         payload.type === 'reminder' ||
@@ -274,15 +295,32 @@ class NotificationService {
 
       console.log('[NotificationService] Opened payload:', payload);
 
+      // Check if this is a retry with voice check-in flag
+      if (payload.voice_check_in) {
+        console.log('[NotificationService] Voice check-in requested - opening VoiceChat');
+        console.log(`[NotificationService] Retry count: ${payload.retry_count || 'unknown'}`);
+
+        // Navigate to VoiceChat with auto-start
+        NavigationService.navigate('VoiceChat', {
+          reminderId: payload.reminder_id,
+          autoStart: true,
+        });
+        return;
+      }
+
       // Navigate to appropriate screen based on notification type
       switch (payload.notification_type) {
         case 'medication_reminder':
-          // Navigate to reminders screen
+          // Navigate to reminders screen (Home)
           console.log('[NotificationService] Navigate to reminders');
+          NavigationService.navigate('Home');
           break;
         case 'check_in':
           // Navigate to voice chat screen
           console.log('[NotificationService] Navigate to voice chat');
+          NavigationService.navigate('VoiceChat', {
+            reminderId: payload.reminder_id,
+          });
           break;
         case 'emergency':
           // Show emergency details
@@ -316,6 +354,8 @@ class NotificationService {
         reminder_type: data.reminder_type as string,
         speak_text: data.speak_text as string,
         requires_response: data.requires_response === 'true' || data.requires_response === true,
+        voice_check_in: data.voice_check_in === 'true' || data.voice_check_in === true,
+        retry_count: data.retry_count as string,
 
         // Legacy/general fields
         patient_id: data.patient_id as string,

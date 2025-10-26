@@ -117,7 +117,7 @@ def check_and_mark_missed_reminders():
     try:
         logger.info("Checking for missed reminders")
 
-        now = datetime.now()
+        now = datetime.utcnow()  # Use UTC to match database timestamps
 
         # Get pending reminders that are past due (more than 30 minutes late)
         late_threshold = now - timedelta(minutes=30)
@@ -172,7 +172,7 @@ def _combine_date_and_time(date, time):
     return datetime.combine(date, time)
 
 
-def _send_reminder_notification(patient: Patient, reminder: Reminder, schedule: Schedule):
+def _send_reminder_notification(patient: Patient, reminder: Reminder, schedule: Schedule, is_retry: bool = False):
     """
     Send push notification for a reminder
 
@@ -180,6 +180,7 @@ def _send_reminder_notification(patient: Patient, reminder: Reminder, schedule: 
         patient: Patient object with device_token
         reminder: Reminder object
         schedule: Schedule object
+        is_retry: If True, includes voice_check_in flag for proactive check-in
     """
     try:
         # Format notification message
@@ -190,6 +191,13 @@ def _send_reminder_notification(patient: Patient, reminder: Reminder, schedule: 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
+        # Add voice check-in flag for retry notifications
+        extra_data = {}
+        if is_retry:
+            extra_data['voice_check_in'] = 'true'
+            extra_data['retry_count'] = str(reminder.retry_count)
+            logger.info(f"Sending retry notification with voice check-in flag (retry {reminder.retry_count})")
+
         success = loop.run_until_complete(
             firebase_service.send_reminder(
                 device_token=patient.device_token,
@@ -199,7 +207,8 @@ def _send_reminder_notification(patient: Patient, reminder: Reminder, schedule: 
                 title=schedule.title,
                 due_at=reminder.due_at.isoformat(),
                 scheduled_time=schedule.scheduled_time.strftime("%H:%M"),
-                requires_response=True
+                requires_response=True,
+                **extra_data
             )
         )
 
@@ -264,7 +273,7 @@ def retry_unacknowledged_reminders():
     try:
         logger.info("Checking for unacknowledged reminders to retry")
 
-        now = datetime.now()
+        now = datetime.utcnow()  # Use UTC to match database timestamps
         retry_threshold = now - timedelta(minutes=15)
 
         # Get pending reminders that are past the retry threshold
@@ -294,7 +303,7 @@ def retry_unacknowledged_reminders():
 
                     # Resend notification if patient has device token
                     if patient and patient.device_token and schedule:
-                        _send_reminder_notification(patient, reminder, schedule)
+                        _send_reminder_notification(patient, reminder, schedule, is_retry=True)
                         retried_count += 1
                     else:
                         logger.warning(

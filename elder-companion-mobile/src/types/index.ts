@@ -81,6 +81,6 @@ export interface PendingMessage {
 export type RootStackParamList = {
   Setup: undefined;
   Home: undefined;
-  VoiceChat: { reminderId?: string };
+  VoiceChat: { reminderId?: string; autoStart?: boolean };
   Settings: undefined;
 };

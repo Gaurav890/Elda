@@ -12,6 +12,11 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Platform,
+  PermissionsAndroid,
+  TextInput,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -33,6 +38,11 @@ export default function SetupScreen() {
   const [scannerActive, setScannerActive] = useState(false);
   const [scanned, setScanned] = useState(false);
   const cameraRef = useRef<RNCamera>(null);
+
+  // Dev mode states
+  const [showDevMode, setShowDevMode] = useState(false);
+  const [patientId, setPatientId] = useState('');
+  const [setupToken, setSetupToken] = useState('');
 
   const handleQRCodeScanned = async (data: string) => {
     if (loading) return;
@@ -101,7 +111,9 @@ export default function SetupScreen() {
     }
   };
 
-  const handleStartScan = () => {
+  const handleStartScan = async () => {
+    // RNCamera handles permissions automatically on iOS
+    // Just activate the scanner
     setScannerActive(true);
   };
 
@@ -140,6 +152,34 @@ export default function SetupScreen() {
     }
   };
 
+  const handleManualSetup = async () => {
+    if (!patientId || !setupToken) {
+      Alert.alert('Missing Information', 'Please enter both Patient ID and Setup Token');
+      return;
+    }
+
+    setShowDevMode(false);
+    setLoading(true);
+
+    try {
+      // Create QR code data format
+      const qrData = JSON.stringify({
+        patient_id: patientId.trim(),
+        setup_token: setupToken.trim(),
+      });
+
+      // Use existing QR code handler
+      await handleQRCodeScanned(qrData);
+    } catch (error) {
+      setLoading(false);
+      console.error('Manual setup error:', error);
+      Alert.alert(
+        'Setup Failed',
+        error instanceof Error ? error.message : 'Please try again'
+      );
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -161,11 +201,21 @@ export default function SetupScreen() {
         )}
 
         {!loading && !scannerActive && (
-          <TouchableOpacity
-            style={styles.scanButton}
-            onPress={handleStartScan}>
-            <Text style={styles.scanButtonText}>📷 Scan QR Code</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={styles.scanButton}
+              onPress={handleStartScan}>
+              <Text style={styles.scanButtonText}>📷 Scan QR Code</Text>
+            </TouchableOpacity>
+
+            {__DEV__ && (
+              <TouchableOpacity
+                style={[styles.scanButton, styles.devButton]}
+                onPress={() => setShowDevMode(true)}>
+                <Text style={styles.scanButtonText}>🛠️ Dev Mode (Manual Entry)</Text>
+              </TouchableOpacity>
+            )}
+          </>
         )}
 
         {scannerActive && !loading && (
@@ -209,6 +259,66 @@ export default function SetupScreen() {
           Need help? Contact your caregiver
         </Text>
       </View>
+
+      {/* Dev Mode Modal */}
+      <Modal
+        visible={showDevMode}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowDevMode(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalContent}>
+              <Text style={styles.modalTitle}>🛠️ Developer Mode</Text>
+              <Text style={styles.modalSubtitle}>Manual Patient Setup</Text>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Patient ID</Text>
+                <TextInput
+                  style={styles.input}
+                  value={patientId}
+                  onChangeText={setPatientId}
+                  placeholder="Enter patient UUID"
+                  placeholderTextColor="#9ca3af"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Setup Token</Text>
+                <TextInput
+                  style={styles.input}
+                  value={setupToken}
+                  onChangeText={setSetupToken}
+                  placeholder="Enter setup token"
+                  placeholderTextColor="#9ca3af"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <Text style={styles.helperText}>
+                💡 Tip: Run get_patient_credentials.py in backend to get credentials
+              </Text>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalCancelButton]}
+                  onPress={() => setShowDevMode(false)}>
+                  <Text style={styles.modalCancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalSubmitButton]}
+                  onPress={handleManualSetup}>
+                  <Text style={styles.modalSubmitButtonText}>Setup</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -355,5 +465,90 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 26,
+  },
+  // Dev Mode Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    width: '90%',
+    maxWidth: 500,
+    maxHeight: '80%',
+  },
+  modalScroll: {
+    maxHeight: '100%',
+  },
+  modalContent: {
+    padding: 24,
+  },
+  modalTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  helperText: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 24,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalCancelButton: {
+    backgroundColor: '#f3f4f6',
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  modalSubmitButton: {
+    backgroundColor: '#10b981',
+  },
+  modalSubmitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });

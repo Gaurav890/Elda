@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Schedule, ScheduleCreate, ScheduleType, RecurrenceType, DayOfWeek } from '@/types/schedule';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,37 +60,56 @@ export function ScheduleForm({
     is_active: true,
   });
 
-  // Reset form when schedule changes or modal opens/closes
+  // Track previous open state to detect when modal opens
+  const prevOpenRef = useRef(open);
+
+  // Reset form only when modal first opens or schedule changes
   useEffect(() => {
-    if (schedule) {
-      setFormData({
-        title: schedule.title,
-        description: schedule.description || '',
-        type: schedule.type,
-        time: schedule.time,
-        recurrence_type: schedule.recurrence_type,
-        days_of_week: schedule.days_of_week || [],
-        reminder_advance_minutes: schedule.reminder_advance_minutes,
-        is_active: schedule.is_active,
-      });
-    } else if (open) {
-      // Reset to defaults when opening for new schedule
-      setFormData({
-        title: '',
-        description: '',
-        type: 'medication',
-        time: '09:00',
-        recurrence_type: 'daily',
-        days_of_week: [],
-        reminder_advance_minutes: 60,
-        is_active: true,
-      });
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+
+    // Only reset when modal just opened
+    if (justOpened) {
+      if (schedule) {
+        // Editing existing schedule
+        setFormData({
+          title: schedule.title,
+          description: schedule.description || '',
+          type: schedule.type,
+          time: schedule.time,
+          recurrence_type: schedule.recurrence_type,
+          days_of_week: schedule.days_of_week || [],
+          reminder_advance_minutes: schedule.reminder_advance_minutes,
+          is_active: schedule.is_active,
+        });
+      } else {
+        // Creating new schedule
+        setFormData({
+          title: '',
+          description: '',
+          type: 'medication',
+          time: '09:00',
+          recurrence_type: 'daily',
+          days_of_week: [],
+          reminder_advance_minutes: 60,
+          is_active: true,
+        });
+      }
     }
-  }, [schedule, open]);
+  }, [open, schedule]); // Listen to both open and schedule
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    // Prepare data for submission
+    const submitData = { ...formData };
+
+    // If recurrence is daily, ensure days_of_week includes all days
+    if (submitData.recurrence_type === 'daily') {
+      submitData.days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    }
+
+    onSubmit(submitData);
   };
 
   const handleDayToggle = (day: DayOfWeek, checked: boolean) => {
@@ -123,7 +142,7 @@ export function ScheduleForm({
               </Label>
               <Input
                 id="title"
-                value={formData.title}
+                value={formData.title || ''}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="e.g., Morning Medication"
                 required
@@ -135,7 +154,7 @@ export function ScheduleForm({
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                value={formData.description}
+                value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional details about this schedule"
                 rows={3}
@@ -174,7 +193,7 @@ export function ScheduleForm({
               <Input
                 id="time"
                 type="time"
-                value={formData.time}
+                value={formData.time || '09:00'}
                 onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                 required
               />
@@ -230,9 +249,9 @@ export function ScheduleForm({
                 id="reminder_advance_minutes"
                 type="number"
                 min="0"
-                value={formData.reminder_advance_minutes}
+                value={formData.reminder_advance_minutes ?? 60}
                 onChange={(e) =>
-                  setFormData({ ...formData, reminder_advance_minutes: parseInt(e.target.value, 10) })
+                  setFormData({ ...formData, reminder_advance_minutes: parseInt(e.target.value, 10) || 0 })
                 }
               />
               <p className="text-xs text-muted-foreground">
@@ -245,7 +264,7 @@ export function ScheduleForm({
               <Label htmlFor="is_active">Active</Label>
               <Switch
                 id="is_active"
-                checked={formData.is_active}
+                checked={formData.is_active ?? true}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
               />
             </div>

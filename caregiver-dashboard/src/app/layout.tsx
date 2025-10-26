@@ -27,9 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${nunitoSans.variable} ${playfairDisplay.variable} antialiased`}
+        suppressHydrationWarning
       >
         <Providers>{children}</Providers>
         <Toaster />
