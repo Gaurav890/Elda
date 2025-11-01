@@ -1,6 +1,4 @@
 #!/bin/bash
-# Complete Rebuild and Setup Script for Demo Recording
-# Run this to get everything ready for the judges demo
 
 set -e  # Exit on any error
 
@@ -230,20 +228,6 @@ echo "  • Backend Docs: http://localhost:8000/docs"
 echo "  • Backend Logs: tail -f /tmp/elda-backend.log"
 echo "  • QR Code Page: Open in browser (already opened)"
 echo "  • Mobile App: Building... (wait 2-3 minutes)"
-echo ""
-echo "📱 Next Steps for Demo Recording:"
-echo ""
-echo "  1. Wait for mobile app to finish building"
-echo "  2. Open QR code page in browser"
-echo "  3. Scan QR code with iPhone Camera"
-echo "  4. Complete setup as Grandma Betty"
-echo "  5. Test voice chat interaction"
-echo "  6. Start recording!"
-echo ""
-echo "📖 Demo Scripts:"
-echo "  • Full Guide: /Users/gaurav/Elda/DEMO_FOR_JUDGES.md"
-echo "  • Quick Script: /Users/gaurav/Elda/JUDGES_DEMO_SCRIPT.md"
-echo ""
 echo "🛠️  Troubleshooting:"
 echo "  • Check backend logs: tail -f /tmp/elda-backend.log"
 echo "  • Check metro bundler: It will open in a new terminal"
